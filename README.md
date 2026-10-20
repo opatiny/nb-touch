@@ -19,3 +19,7 @@ Activate the local venv with `source .venv/bin/activate`.
 ## Running tests
 
 In an activated venv terminal: `pytest`
+
+## Recording data on the ORCA hand
+
+To record the data for the taxel orientation calibration on the ORCA hand, use `tools/touch/record_taxel_calibration.py` in [`dextHand`](https://github.com/opatiny/robManip) (doc: `docs/tools/record-taxel-calibration.md`). It writes the [recording format](docs/formats/recordings.md).
