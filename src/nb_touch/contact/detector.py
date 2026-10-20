@@ -42,13 +42,15 @@ class ContactDetector:
         self.settings = settings
         self.filter = active_filter or ThresholdFilter(settings.threshold)
 
-    def update(self, forces, in_taxel_frames: bool = True) -> list[Contact]:
+    def update(self, forces, *, in_taxel_frames: bool) -> list[Contact]:
         """Find the contacts in one frame.
 
         Args:
             forces: Taxel forces `(n, 3)`, in N.
-            in_taxel_frames: True if each force is in its taxel's frame, as in the
-                recording format; False if already in the sensor frame.
+            in_taxel_frames: True if each force is in its own taxel's frame, as in
+                the recording format: it is rotated to the sensor frame first. False
+                if the forces are already in the sensor frame, as `orca_core` streams
+                them. Required, so the caller states which frame the forces are in.
 
         Returns:
             The contacts, largest CoP force first.

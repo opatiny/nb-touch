@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from nb_touch.contact.contacts import ContactSettings, find_contacts
 from nb_touch.contact.cop_model import cop_to_taxel_forces, taxel_force_matrices
@@ -25,7 +26,7 @@ def test_taxel_frame_forces_match_sensor_frame_result():
     forces = sphere_push(0, 2.0 * NORMALS[0])
     local = rotate_vectors(SPHERE.rotations.transpose(0, 2, 1), forces)
     detector = ContactDetector(SPHERE)
-    from_local = detector.update(local)
+    from_local = detector.update(local, in_taxel_frames=True)
     from_sensor = ContactDetector(SPHERE).update(forces, in_taxel_frames=False)
     expected = find_contacts(
         SPHERE.positions, NORMALS, forces, taxel_neighbours(SPHERE.positions)
@@ -49,3 +50,11 @@ def test_filter_delays_contact():
     detector = ContactDetector(SPHERE, settings, Debounce(settings.threshold, 2))
     assert detector.update(forces, in_taxel_frames=False) == []
     assert len(detector.update(forces, in_taxel_frames=False)) == 1
+
+
+def test_force_frame_must_be_given():
+    detector = ContactDetector(SPHERE)
+    with pytest.raises(TypeError, match="in_taxel_frames"):
+        detector.update(np.zeros((SPHERE.num_taxels, 3)))
+    with pytest.raises(TypeError):
+        detector.update(np.zeros((SPHERE.num_taxels, 3)), True)
