@@ -8,7 +8,7 @@ Index of the `nb-touch` docs.
 
 ## Theory
 
-- [cop.md](theory/cop.md): from taxel forces to one or more contacts, each with its CoP and CoP force.
+- [cop.md](theory/cop.md): from taxel forces to one or more contacts, each with its CoP and CoP force, and how to use `nb_touch.contact`.
 - [taxel-orientation.md](theory/taxel-orientation.md): calibrating the taxel orientations from joint torques, and the solver.
 - [so3-projection.md](theory/so3-projection.md): `project_to_so3`, the closest rotation to a 3×3 matrix.
 - [joint-torques.md](theory/joint-torques.md): which torques the calibration needs and where they come from.
@@ -17,6 +17,10 @@ Index of the `nb-touch` docs.
 
 - [sensor-geometry.md](formats/sensor-geometry.md): taxel positions and orientations in the sensor frame.
 - [recordings.md](formats/recordings.md): data recorded for the taxel orientation calibration, and why npz rather than JSON.
+
+## Usage
+
+- [geometry.md](usage/geometry.md): normals, taxel frames, neighbours, rotations and synthetic sensors.
 
 ## Development
 
