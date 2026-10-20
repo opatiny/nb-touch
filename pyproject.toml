@@ -1,0 +1,29 @@
+[project]
+name = "nb-touch"
+version = "0.1.0"
+description = "Hardware-agnostic processing and calibration of taxel array touch sensors."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Oceane Patiny", email = "oceane@patiny.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "numpy",
+    "pyyaml",
+    "torch",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.15,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["src"]
+addopts = ["--import-mode=importlib"]
