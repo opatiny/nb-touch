@@ -41,22 +41,29 @@ Source: `src/nb_touch/contact/cop_model.py`.
 
 ## Usage
 
-Implemented in `src/nb_touch/contact/`, imported from `nb_touch.contact`. Forces are in the sensor frame, except where `in_taxel_frames` says otherwise.
+Implemented in `src/nb_touch/contact/`, imported from `nb_touch.contact`.
+
+Frame in which the taxel forces are expressed:
+
+- Taxel frame: each taxel measures its force along its own axes, z along its own normal. On a curved sensor, these axes differ from taxel to taxel. The recording format stores forces this way, as in the paper.
+- Sensor frame: one frame shared by all taxels. The CoP model needs every force in it, to add and compare them.
+
+Top-level classes and functions:
 
 - `ContactDetector(geometry, settings=ContactSettings(), active_filter=None)`: holds a sensor's normals and neighbours, computed once. Missing rotations are estimated from the positions.
-- `ContactDetector.update(forces, in_taxel_frames=True)`: the contacts in one frame, largest CoP force first. With `in_taxel_frames`, forces are rotated to the sensor frame first.
+- `ContactDetector.update(forces, in_taxel_frames=...)`: the contacts in one frame, largest CoP force first. `in_taxel_frames` must always be given, so the caller states which frame the forces are in.
 - `find_contacts(positions, normals, forces, neighbours, settings=ContactSettings())`: the same for one frame, without the detector or a filter.
 - `make_filter(name, threshold, off_threshold=0.1, frames=5)`: `none`, `hysteresis` or `debounce`, to pass as `active_filter`.
 
-| Parameter         | What it does                                                     | Default                           |
-| ----------------- | ---------------------------------------------------------------- | --------------------------------- |
-| `geometry`        | `SensorGeometry` of the sensor.                                  | required                          |
-| `settings`        | `ContactSettings`, below.                                        | `ContactSettings()`               |
-| `active_filter`   | Object with `update(norms)` returning the taxels in contact.     | threshold at `settings.threshold` |
-| `forces`          | Taxel forces (n, 3), in N.                                       | required                          |
-| `in_taxel_frames` | Forces given in each taxel's frame, as in the recording format.  | `True`                            |
-| `off_threshold`   | With hysteresis, force norm below which a taxel turns off, in N. | `0.1`                             |
-| `frames`          | Number of frames required over threshold to be an active taxel.  | `5`                               |
+| Parameter         | What it does                                                                                                                      | Default                           |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| `geometry`        | `SensorGeometry` of the sensor.                                                                                                   | required                          |
+| `settings`        | `ContactSettings`, below.                                                                                                         | `ContactSettings()`               |
+| `active_filter`   | Object with `update(norms)` returning the taxels in contact.                                                                      | threshold at `settings.threshold` |
+| `forces`          | Taxel forces (n, 3), in N.                                                                                                        | required                          |
+| `in_taxel_frames` | `True`: forces in each taxel's frame, rotated to the sensor frame first. `False`: forces already in the sensor frame (ORCA hand). | required, keyword only            |
+| `off_threshold`   | With hysteresis, force norm below which a taxel turns off, in N.                                                                  | `0.1`                             |
+| `frames`          | Number of frames required over threshold to be an active taxel.                                                                   | `5`                               |
 
 `ContactSettings`:
 
