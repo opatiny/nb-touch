@@ -22,3 +22,20 @@ It merges two existing formats:
 
 - `orca_core`, `orca_core/hardware/sensing/models/touch-sensor-finger/config.yaml`: `name`, `frame`, `units`, `num_taxels` and positions, read by `orca_core/hardware/sensing/taxel_geometry.py`. Sensor frame convention from the same file.
 - `dextHand`, `data/software/taxel_frames.yaml`: one rotation per taxel, local z along the normal, written by `src/dexthand/touch/taxel_frames.py`.
+
+## Usage
+
+Implemented in `src/nb_touch/io/sensor_geometry.py`, imported from `nb_touch.io`.
+
+- `SensorGeometry`: `name`, `positions` (n, 3) in metres, `rotations` (n, 3, 3) or `None`.
+- `load_sensor_geometry(path)`: reads a file, converting positions to metres. Raises a `ValueError` if a field is missing or invalid, or if only some taxels have a rotation.
+- `save_sensor_geometry(geometry, path, units="mm", decimals=6)`: writes a file and returns its path.
+
+| Parameter | What it does | Default |
+|---|---|---|
+| `geometry` | Geometry to write. | required |
+| `path` | Destination file, parent folders created. | required |
+| `units` | Units of the positions in the file, `mm` or `m`. | `"mm"` |
+| `decimals` | Decimals kept for positions and rotation entries. | `6` |
+
+Field checks adapted from `orca_core` (MIT), `orca_core/hardware/sensing/taxel_geometry.py`; rounding and matrix layout from `dextHand`, `src/dexthand/touch/taxel_frames.py`.
