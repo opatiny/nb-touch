@@ -77,3 +77,53 @@ def sphere_sensor(
         [sin_polar * np.cos(azimuth), sin_polar * np.sin(azimuth), cos_polar], axis=1
     )
     return SensorGeometry("sphere", radius * normals, rotations_from_normals(normals))
+
+
+SHAPES = ("plane", "cylinder", "sphere")
+"""Shapes of `synthetic_sensor`."""
+
+
+def near_square_grid(num_taxels: int) -> tuple[int, int]:
+    """Return `(rows, cols)`, close to square, with at least `num_taxels` cells."""
+    rows = max(1, round(num_taxels**0.5))
+    return rows, -(-num_taxels // rows)
+
+
+def first_taxels(geometry: SensorGeometry, num_taxels: int) -> SensorGeometry:
+    """Return the geometry with only its first `num_taxels` taxels."""
+    return SensorGeometry(
+        geometry.name,
+        geometry.positions[:num_taxels],
+        geometry.rotations[:num_taxels],
+    )
+
+
+def synthetic_sensor(
+    shape: str, num_taxels: int, spacing: float = 0.003, radius: float = 0.01
+) -> SensorGeometry:
+    """Return a synthetic sensor with exactly `num_taxels` taxels.
+
+    Plane and cylinder: a near-square grid, its last row cut to the count. Sphere:
+    a cap of 60° around +z.
+
+    Args:
+        shape: One of `SHAPES`.
+        num_taxels: Number of taxels, at least 1.
+        spacing: Distance between grid neighbours, in m (plane and cylinder).
+        radius: Cylinder or sphere radius, in m.
+
+    Raises:
+        ValueError: If the shape is unknown or `num_taxels` below 1.
+    """
+    if num_taxels < 1:
+        raise ValueError(f"need at least 1 taxel, got {num_taxels}")
+    rows, cols = near_square_grid(num_taxels)
+    if shape == "plane":
+        return first_taxels(plane_sensor(rows, cols, spacing), num_taxels)
+    if shape == "cylinder":
+        arc = (cols - 1) * spacing / radius
+        sensor = cylinder_sensor(radius, rows, cols, spacing, arc)
+        return first_taxels(sensor, num_taxels)
+    if shape == "sphere":
+        return sphere_sensor(radius, num_taxels)
+    raise ValueError(f"unknown shape {shape!r}, expected one of {SHAPES}")

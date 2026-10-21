@@ -2,7 +2,14 @@ import numpy as np
 import pytest
 
 from nb_touch.geometry.frames import normals_from_rotations
-from nb_touch.geometry.synthetic import cylinder_sensor, plane_sensor, sphere_sensor
+from nb_touch.geometry.synthetic import (
+    SHAPES,
+    cylinder_sensor,
+    near_square_grid,
+    plane_sensor,
+    sphere_sensor,
+    synthetic_sensor,
+)
 
 
 def test_plane_grid_shape_and_centre():
@@ -43,3 +50,32 @@ def test_rotations_are_rotations(make):
         np.broadcast_to(np.eye(3), rotations.shape),
         atol=1e-12,
     )
+
+
+@pytest.mark.parametrize("shape", SHAPES)
+@pytest.mark.parametrize("count", [1, 2, 7, 25, 87])
+def test_synthetic_sensor_has_exact_count(shape, count):
+    sensor = synthetic_sensor(shape, count)
+    assert sensor.num_taxels == count
+    assert sensor.rotations.shape == (count, 3, 3)
+
+
+def test_synthetic_cylinder_keeps_spacing_around_axis():
+    sensor = synthetic_sensor("cylinder", 25, spacing=0.003, radius=0.01)
+    # First row: taxels 0 and 1 are neighbours around the axis.
+    arc_length = 0.01 * np.arccos(
+        np.dot(sensor.positions[0, [0, 2]], sensor.positions[1, [0, 2]]) / 0.01**2
+    )
+    assert arc_length == pytest.approx(0.003)
+
+
+def test_near_square_grid():
+    assert near_square_grid(25) == (5, 5)
+    assert near_square_grid(26) == (5, 6)
+    assert near_square_grid(1) == (1, 1)
+
+
+@pytest.mark.parametrize(("shape", "count"), [("cube", 10), ("plane", 0)])
+def test_synthetic_sensor_rejects_bad_input(shape, count):
+    with pytest.raises(ValueError):
+        synthetic_sensor(shape, count)
