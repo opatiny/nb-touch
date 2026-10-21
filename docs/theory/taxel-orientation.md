@@ -1,5 +1,7 @@
 # Taxel orientation calibration
 
+> todo: merge recordings.ms with this doc
+
 Estimating the rotation $R_i$ of each taxel in the sensor frame from recorded taxel forces, joint angles and joint torques, without a force sensor.
 
 ## Method in the paper

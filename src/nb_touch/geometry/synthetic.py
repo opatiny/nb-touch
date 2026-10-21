@@ -6,6 +6,9 @@ import numpy as np
 from nb_touch.geometry.frames import rotations_from_normals
 from nb_touch.io.sensor_geometry import SensorGeometry
 
+SHAPES = ("plane", "cylinder", "sphere")
+"""Shapes of `synthetic_sensor`."""
+
 
 def grid(rows: int, cols: int, spacing: float) -> tuple[np.ndarray, np.ndarray]:
     """Return the x and y coordinates `(rows * cols,)` of a grid centred on 0."""
@@ -77,10 +80,6 @@ def sphere_sensor(
         [sin_polar * np.cos(azimuth), sin_polar * np.sin(azimuth), cos_polar], axis=1
     )
     return SensorGeometry("sphere", radius * normals, rotations_from_normals(normals))
-
-
-SHAPES = ("plane", "cylinder", "sphere")
-"""Shapes of `synthetic_sensor`."""
 
 
 def near_square_grid(num_taxels: int) -> tuple[int, int]:

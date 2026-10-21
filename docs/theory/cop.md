@@ -2,6 +2,8 @@
 
 From a set of taxels with their xyz forces to N contacts on a sensor, each with its centre of pressure (CoP), CoP force and stats.
 
+> todo: remove cop model, it's in the paper
+
 ## Pipeline
 
 1. **Active taxels**: taxels whose force norm is above a threshold, optionally filtered over time (hysteresis or debounce) so contacts do not flicker.
@@ -27,59 +29,42 @@ Per sensor, the contact is a 3D force and a 3D position **in the sensor frame**.
 
 Source: [arXiv 2605.28812](https://arxiv.org/abs/2605.28812), from an automatic summary of the HTML version: check against the paper before implementing.
 
-### What are lambda and sigma?
-
-- $\sigma$ (in meters): spread of the Gaussian weights $w_i$, so the distance over which a taxel still shares the CoP force.
-  - Small $\sigma$: only taxels at the CoP count; the others get $w_i \approx 0$ and their $\hat{b}_i$ turn to the radial direction $\hat{v}_i$.
-  - Large $\sigma$: every taxel gets $w_i \approx 1$, so each is modelled as carrying the whole CoP force, and the solve returns about the mean taxel force instead of their sum.
-- $\lambda$ (no unit): ridge regularisation (Hoerl and Kennard 1970) of the inverse solve.
-  - Adds $\lambda^2$ to the diagonal of $A^T A$, so the solve stays defined when $A^T A$ is singular or close to it (few taxels, all $w_i \approx 0$).
-  - Pulls $f_{cop}$ towards 0: negligible while $\lambda^2 \ll \sum_i w_i^2$, the size of $A^T A$.
-  - $\lambda = 0$: plain least squares (minimum-norm solution when singular).
-
-Source: `src/nb_touch/contact/cop_model.py`.
-
 ## Usage
 
 Implemented in `src/nb_touch/contact/`, imported from `nb_touch.contact`.
 
-Frame in which the taxel forces are expressed:
+This project uses the following reference frames: the **sensor** frame and the frames for each individual **taxels**. In order to combine the taxel forces, they first need to be transformed into a common frame, in our case the sensor frame.
 
-- Taxel frame: each taxel measures its force along its own axes, z along its own normal. On a curved sensor, these axes differ from taxel to taxel. The recording format stores forces this way, as in the paper.
-- Sensor frame: one frame shared by all taxels. The CoP model needs every force in it, to add and compare them.
+In order to detect the contact zones on a finger and get the CoP position and force for each of these zones, use `ContactDetector(geometry, settings=ContactSettings(), active_filter=None)`. it will compute the taxel's normals and neighbours internally.
 
-Top-level classes and functions:
+Moreover, if the orientation of some taxel frames are missing, the contact detectors will fill them in based on the geometry!!
 
-- `ContactDetector(geometry, settings=ContactSettings(), active_filter=None)`: holds a sensor's normals and neighbours, computed once. Missing rotations are estimated from the positions.
-- `ContactDetector.update(forces, in_taxel_frames=...)`: the contacts in one frame, largest CoP force first. `in_taxel_frames` must always be given, so the caller states which frame the forces are in.
-- `find_contacts(positions, normals, forces, neighbours, settings=ContactSettings())`: the same for one frame, without the detector or a filter.
-- `make_filter(name, threshold, off_threshold=0.1, frames=5)`: `none`, `hysteresis` or `debounce`, to pass as `active_filter`.
+Each missing rotation is the smallest one taking the sensor's z axis to the taxel's normal (Rodrigues' formula):
 
-| Parameter         | What it does                                                                                                                      | Default                           |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| `geometry`        | `SensorGeometry` of the sensor.                                                                                                   | required                          |
-| `settings`        | `ContactSettings`, below.                                                                                                         | `ContactSettings()`               |
-| `active_filter`   | Object with `update(norms)` returning the taxels in contact.                                                                      | threshold at `settings.threshold` |
-| `forces`          | Taxel forces (n, 3), in N.                                                                                                        | required                          |
-| `in_taxel_frames` | `True`: forces in each taxel's frame, rotated to the sensor frame first. `False`: forces already in the sensor frame (ORCA hand). | required, keyword only            |
-| `off_threshold`   | With hysteresis, force norm below which a taxel turns off, in N.                                                                  | `0.1`                             |
-| `frames`          | Number of frames required over threshold to be an active taxel.                                                                   | `5`                               |
+- z: the taxel's outward normal, from a plane fitted to the taxel and its nearest neighbours.
+- x and y: the sensor's x and y, tilted as little as possible to stay perpendicular to that normal. On a flat sensor, they are the sensor's x and y.
+- The positions of the taxels only allow to estimate the normal (z axis), not the rotation about it: the real x and y of a taxel should come from the [orientation calibration](taxel-orientation.md) or a known taxel layout.
+
+Source: `src/nb_touch/geometry/frames.py`; see also [Normals and taxel frames](../usage/geometry.md#normals-and-taxel-frames).
 
 `ContactSettings`:
 
 | Field            | What it does                                                            | Default |
 | ---------------- | ----------------------------------------------------------------------- | ------- |
 | `threshold`      | Taxel force norm above which a taxel is active, in N.                   | `0.2`   |
-| `min_taxels`     | Fewest taxels a contact needs.                                          | `3`     |
+| `min_taxels`     | Minimum number of active taxels in a contact.                           | `3`     |
 | `sigma`          | Spread σ of the Gaussian weights, in m.                                 | `0.003` |
 | `regularisation` | Ridge λ of the CoP force solve; 0 gives the minimum-norm least squares. | `0.001` |
 
-- `threshold` and `min_taxels`: values used on the ORCA hand in `dextHand`.
-- `sigma` and `regularisation`: our choice, as the paper gives no value. σ is about one taxel spacing on the ORCA sensors: 3.11 mm (finger), 3.32 mm (thumb), 3.04 mm (pinky), median nearest-neighbour distance computed by us from the `orca_core` sensor configs.
+- `sigma`or $\sigma$ (in meters): spread of the Gaussian weights $w_i$, so the distance over which a taxel still shares the CoP force.
+  - Small $\sigma$: only taxels at the CoP count; the others get $w_i \approx 0$ and their $\hat{b}_i$ turn to the radial direction $\hat{v}_i$.
+  - Large $\sigma$: every taxel gets $w_i \approx 1$, so each is modelled as carrying the whole CoP force, and the solve returns about the mean taxel force instead of their sum.
+- `regularisation` or $\lambda$ (no unit): ridge regularisation (Hoerl and Kennard 1970) of the inverse solve.
+  - Adds $\lambda^2$ to the diagonal of $A^T A$, so the solve stays defined when $A^T A$ is singular or close to it (few taxels, all $w_i \approx 0$).
+  - Pulls $f_{cop}$ towards 0: negligible while $\lambda^2 \ll \sum_i w_i^2$, the size of $A^T A$.
+  - $\lambda = 0$: plain least squares (minimum-norm solution when singular).
 
-Each `Contact` has: `taxels`, `cop`, `normal` (at the CoP), `cop_force` (from the solve), `total_force` (sum of the taxel forces), `normal_force` and `shear_force` (split of `cop_force` along `normal`), `slip_ratio`, `max_force`, `mean_force`, `count`.
-
-The model's steps are also exposed, for example to simulate taxel forces from a CoP force: `cop_position`, `cop_normal`, `taxel_force_matrices` (the $M_i$), `cop_to_taxel_forces` and `taxel_to_cop_force`.
+The paper gives no value `sigma` and `regularisation`. We set σ to be about one taxel spacing on the ORCA hand sensors: 3.11 mm (index, middle, ring), 3.32 mm (thumb), 3.04 mm (pinky).
 
 ## Known bias
 
