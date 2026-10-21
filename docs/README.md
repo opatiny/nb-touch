@@ -21,6 +21,7 @@ Index of the `nb-touch` docs.
 ## Usage
 
 - [geometry.md](usage/geometry.md): normals, taxel frames, neighbours, rotations and synthetic sensors.
+- [viz.md](usage/viz.md): drawing taxels, forces and contacts in MuJoCo, and the CoP example.
 
 ## Development
 

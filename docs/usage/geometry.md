@@ -35,6 +35,7 @@ Taken from `dextHand`, `src/dexthand/touch/taxels.py`.
 
 Sensors with known normals, for tests and demos. Each returns a `SensorGeometry` with positions in metres and the true rotations.
 
+- `synthetic_sensor(shape, num_taxels, spacing=0.003, radius=0.01)`: exactly `num_taxels` taxels on a `plane`, `cylinder` (near-square grid, last row cut) or `sphere` (60° cap).
 - `plane_sensor(rows=5, cols=5, spacing=0.003)`: grid in the plane z = 0, centred on 0.
 - `cylinder_sensor(radius=0.008, rows=6, cols=7, spacing=0.003, arc=π/2)`: arc of a cylinder of axis y through 0, centred on +z.
 - `sphere_sensor(radius=0.01, count=40, cap=π/3)`: Fibonacci spiral on a spherical cap around +z (González, Math. Geosci. 42, 2010).
