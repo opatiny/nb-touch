@@ -4,24 +4,18 @@ Proposed YAML format for the taxel positions and orientations of one sensor mode
 
 ## Fields
 
-| Field | What it is |
-|---|---|
-| `name` | Sensor model name. |
-| `frame` | Always `sensor`. |
-| `units` | `mm` or `m`, for positions. |
-| `num_taxels` | Number of taxels, checked against `taxels`. |
-| `taxels` | One entry per taxel, in the order of the force stream. |
-| `taxels[i].position` | `[x, y, z]` in `units`. |
+| Field                | What it is                                                                                                                                |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`               | Sensor model name.                                                                                                                        |
+| `frame`              | Always `sensor`.                                                                                                                          |
+| `units`              | `mm` or `m`, for positions.                                                                                                               |
+| `num_taxels`         | Number of taxels, checked against `taxels`.                                                                                               |
+| `taxels`             | One entry per taxel, in the order of the force stream.                                                                                    |
+| `taxels[i].position` | `[x, y, z]` in `units`.                                                                                                                   |
 | `taxels[i].rotation` | Optional 3×3 matrix from the taxel frame to the sensor frame, local z along the outward normal. Estimated from the geometry when missing. |
 
 Sensor frame: z points outward through the sensing surface, right-handed.
-
-## Sources
-
-It merges two existing formats:
-
-- `orca_core`, `orca_core/hardware/sensing/models/touch-sensor-finger/config.yaml`: `name`, `frame`, `units`, `num_taxels` and positions, read by `orca_core/hardware/sensing/taxel_geometry.py`. Sensor frame convention from the same file.
-- `dextHand`, `data/software/taxel_frames.yaml`: one rotation per taxel, local z along the normal, written by `src/dexthand/touch/taxel_frames.py`.
+Inspired by the Orca hand `orca_core` file format.
 
 ## Usage
 
@@ -31,11 +25,11 @@ Implemented in `src/nb_touch/io/sensor_geometry.py`, imported from `nb_touch.io`
 - `load_sensor_geometry(path)`: reads a file, converting positions to metres. Raises a `ValueError` if a field is missing or invalid, or if only some taxels have a rotation.
 - `save_sensor_geometry(geometry, path, units="mm", decimals=6)`: writes a file and returns its path.
 
-| Parameter | What it does | Default |
-|---|---|---|
-| `geometry` | Geometry to write. | required |
-| `path` | Destination file, parent folders created. | required |
-| `units` | Units of the positions in the file, `mm` or `m`. | `"mm"` |
-| `decimals` | Decimals kept for positions and rotation entries. | `6` |
+| Parameter  | What it does                                      | Default  |
+| ---------- | ------------------------------------------------- | -------- |
+| `geometry` | Geometry to write.                                | required |
+| `path`     | Destination file, parent folders created.         | required |
+| `units`    | Units of the positions in the file, `mm` or `m`.  | `"mm"`   |
+| `decimals` | Decimals kept for positions and rotation entries. | `6`      |
 
 Field checks adapted from `orca_core` (MIT), `orca_core/hardware/sensing/taxel_geometry.py`; rounding and matrix layout from `dextHand`, `src/dexthand/touch/taxel_frames.py`.

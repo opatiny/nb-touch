@@ -32,11 +32,3 @@ npz is numpy's own format: a zip of binary arrays, written with `np.savez_compre
 Sizes computed by us: 626,400 float64 values, and about 18 characters per number in JSON or CSV.
 
 YAML or JSON remain the choice for small files, such as [sensor geometry](sensor-geometry.md) and metadata.
-
-## Reading and writing a recording
-
-Implemented in `src/nb_touch/io/recordings.py`, imported from `nb_touch.io`.
-
-- `Recording`: the four arrays above plus `metadata`, a dict. Shapes are checked on creation.
-- `save_recording(recording, path)`: writes `<path>.npz` and `<path>.yaml` and returns both paths.
-- `load_recording(path)`: reads both files. Raises a `FileNotFoundError` if one is missing, and a `ValueError` if an array is missing or shapes disagree.
