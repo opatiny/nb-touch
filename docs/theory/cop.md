@@ -39,18 +39,33 @@ Source: `src/nb_touch/geometry/frames.py`; see also [Finding normal at taxel](..
 | ---------------- | ----------------------------------------------------------------------- | ------- |
 | `threshold`      | Taxel force norm above which a taxel is active, in N.                   | `0.2`   |
 | `min_taxels`     | Minimum number of active taxels in a contact.                           | `3`     |
-| `sigma`          | Spread σ of the Gaussian weights, in m.                                 | `0.003` |
+| `sigma`          | Spread σ of the Gaussian weights, in m; `None` for `sigma_factor` times the median taxel spacing of the sensor. | `None` |
+| `sigma_factor`   | σ over the median taxel spacing, used when `sigma` is `None`. A sensor of a single taxel gets σ = 3 mm. | `1.5` |
 | `regularisation` | Ridge λ of the CoP force solve; 0 gives the minimum-norm least squares. | `0.001` |
 
-- `sigma`or $\sigma$ (in meters): spread of the Gaussian weights $w_i$, so the distance over which a taxel still shares the CoP force.
-  - Small $\sigma$: only taxels at the CoP count; the others get $w_i \approx 0$ and their $\hat{b}_i$ turn to the radial direction $\hat{v}_i$.
-  - Large $\sigma$: every taxel gets $w_i \approx 1$, so each is modelled as carrying the whole CoP force, and the solve returns about the mean taxel force instead of their sum.
-- `regularisation` or $\lambda$ (no unit): ridge regularisation (Hoerl and Kennard 1970) of the inverse solve.
-  - Adds $\lambda^2$ to the diagonal of $A^T A$, so the solve stays defined when $A^T A$ is singular or close to it (few taxels, all $w_i \approx 0$).
-  - Pulls $f_{cop}$ towards 0: negligible while $\lambda^2 \ll \sum_i w_i^2$, the size of $A^T A$.
-  - $\lambda = 0$: plain least squares (minimum-norm solution when singular).
+## The lambda and sigma parameters
 
-The paper gives no value `sigma` and `regularisation`. We set σ to be about one taxel spacing on the ORCA hand sensors: 3.11 mm (index, middle, ring), 3.32 mm (thumb), 3.04 mm (pinky).
+## Sigma
+
+`sigma`or $\sigma$ (in meters): spread of the Gaussian weights $w_i$, which defines the distance over which a taxel still shares the CoP force.
+
+- Small $\sigma$: only taxels at the CoP count; the others get $w_i \approx 0$ and their $\hat{b}_i$ turn to the radial direction $\hat{v}_i$.
+- Large $\sigma$: every taxel gets $w_i \approx 1$, so each is modelled as carrying the whole CoP force, and the solve returns about the mean taxel force instead of their sum.
+- Used both in the forward model (from the CoP force to the taxel forces) and in the inverse solve.
+
+## Regularisation
+
+`regularisation` or $\lambda$ (no unit): parameter for the ridge regularisation ([Hoerl and Kennard 1970](https://doi.org/10.1080/00401706.1970.10488634)) of the inverse solve.
+
+- In plain words: when the taxel forces do not pin down the CoP force well, plain least squares can return a huge answer driven by noise. Ridge accepts a small bias towards 0 in exchange for a much more stable answer.
+- Adds $\lambda^2$ to the diagonal of $A^T A$, with $A$ the matrix of the forward model, from the CoP force to the stacked taxel forces, so the solve stays defined when $A^T A$ is singular or close to it (few taxels, all $w_i \approx 0$).
+- Pulls the CoP force $f_{cop}$ towards 0: negligible while $\lambda^2 \ll \sum_i w_i^2$, the size of $A^T A$.
+- $\lambda = 0$: plain least squares (minimum-norm solution when singular).
+- Used only in the inverse solve, not in the forward model.
+
+## Default values
+
+The paper gives no value `sigma` and `regularisation`. By default, we set σ to be 1.5 times the median taxel spacing on the sensor. This ensures 8 point connectivity in a rectangular grid.
 
 ## Known bias
 
