@@ -8,7 +8,7 @@ Estimating the rotation $R_i$ of each taxel relative to the sensor frame. The ca
 
 - $R_i$ is a free 3×3 matrix, projected to a rotation with [`project_to_so3`](so3-projection.md).
 - Data: 2400 samples (2 min at 20 Hz) of random fingertip contacts, with taxel forces, joint torques $\tau \in \mathbb{R}^4$ and joint angles $q \in \mathbb{R}^4$ of one finger.
-- Static equilibrium: $\tau = -J^T f + g(q) \approx -J^T f$, gravity being neglected.
+- Static equilibrium: $\tau = -J^T f + g(q) \approx -J^T f$, gravity being neglected, with $f$ the force acting on the finger ([Conventions](../../README.md#conventions)).
 - Prediction: $\hat\tau = -\hat{J}_{cop}^T \hat{f}_{cop}$, with the Jacobian at the estimated CoP and the estimated [CoP force](cop.md).
 - Loss: MSE between $\hat\tau$ and the recorded joint torques. Adam, learning rate 0.1, 100 steps.
 

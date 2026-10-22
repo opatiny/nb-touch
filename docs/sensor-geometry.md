@@ -18,7 +18,7 @@ Proposed YAML format for the taxel positions and orientations of one sensor mode
 | `taxels[i].position` | `[x, y, z]` in `units`.                                                                                                                   |
 | `taxels[i].rotation` | Optional 3×3 matrix from the taxel frame to the sensor frame, local z along the outward normal. Estimated from the geometry when missing. |
 
-Sensor frame: z points outward through the sensing surface, right-handed.
+Sensor frame: z points outward through the sensing surface, right-handed. See [Conventions](../README.md#conventions).
 Inspired by the Orca hand `orca_core` file format.
 
 ## Save and load a geometry file

@@ -11,6 +11,18 @@ Main features:
 - Conversion from taxel forces to CoP force.
 - Tools for automatic taxel orientation detection: this requires torque sensors for all the links active when touching the sensor.
 
+## Conventions
+
+- Normals at the taxels point outward, out of the sensing surface. The sensor frame and every taxel frame are right-handed, with z along the outward normal.
+- Forces are the forces acting on the sensor, as the taxels feel them: a push points against the outward normal.
+
+Be careful:
+
+- The paper's normals $n_i$ point inward: they are the opposites of ours.
+- Hardware readings must be converted to these conventions before use.
+
+Source: [arXiv 2605.28812](https://arxiv.org/html/2605.28812v1), Sections 3.2 (inward normals, $f_{cop}$ acting on the robot link) and 3.3 ($\tau = -J^T f$).
+
 ## From taxels to resultant force (and conversly)
 
 The resultant force is computed from the taxel forces using the CoP model presented in the paper.
@@ -32,10 +44,10 @@ sensor = plane_sensor(rows=3, cols=3, spacing=0.003)
 detector = ContactDetector(sensor, ContactSettings(min_taxels=1))
 
 forces = np.zeros((9, 3))  # one force per taxel
-forces[4] = [0.0, 0.0, 1.0]
+forces[4] = [0.0, 0.0, -1.0]
 contacts = detector.update(forces, in_taxel_frames=False)
 print(contacts[0].cop)  # [0. 0. 0.]
-print(contacts[0].cop_force)  # [0. 0. 1.]
+print(contacts[0].cop_force)  # [ 0.  0. -1.]
 ```
 
 `min_taxels=1` lets a single taxel make a contact (default: 3).
@@ -52,21 +64,21 @@ normals = normals_from_rotations(sensor.rotations)
 cop = np.zeros(3)
 normal = cop_normal(sensor.positions, normals, cop)
 matrices = taxel_force_matrices(sensor.positions, normals, cop, normal)
-print(cop_to_taxel_forces([0.0, 0.0, 1.0], matrices))
+print(cop_to_taxel_forces([0.0, 0.0, -1.0], matrices))
 ```
 
 Expected print, one row per taxel:
 
 ```text
-[[-0.225 -0.225  0.185]
- [ 0.    -0.33   0.509]
- [ 0.225 -0.225  0.185]
- [-0.33   0.     0.509]
- [ 0.     0.     1.   ]
- [ 0.33   0.     0.509]
- [-0.225  0.225  0.185]
- [ 0.     0.33   0.509]
- [ 0.225  0.225  0.185]]
+[[-0.225 -0.225 -0.185]
+ [ 0.    -0.33  -0.509]
+ [ 0.225 -0.225 -0.185]
+ [-0.33   0.    -0.509]
+ [ 0.     0.    -1.   ]
+ [ 0.33   0.    -0.509]
+ [-0.225  0.225 -0.185]
+ [ 0.     0.33  -0.509]
+ [ 0.225  0.225 -0.185]]
 ```
 
 The centre taxel gets the whole push. The others get less the further they are, tilted away from the CoP.

@@ -2,6 +2,8 @@
 
 From a set of taxels with their xyz forces to N contacts on a sensor, each with its centre of pressure (CoP), CoP force and stats.
 
+Signs of forces and normals: see [Conventions](../../README.md#conventions).
+
 ## Pipeline
 
 1. **Active taxels**: taxels whose force norm is above a threshold, optionally filtered over time (hysteresis or debounce) so contacts do not flicker.
@@ -52,7 +54,7 @@ The paper gives no value `sigma` and `regularisation`. We set σ to be about one
 
 ## Known bias
 
-Shear makes the taxel force norms asymmetric, so the force-weighted CoP moves towards the shear and the solved force is off. Push of [0.5, 0, 2] N at the centre of a 9×9 plane, 3 mm spacing, σ = 3 mm (computed by us):
+Shear makes the taxel force norms asymmetric, so the force-weighted CoP moves towards the shear and the solved force is off. Push of [0.5, 0, -2] N at the centre of a 9×9 plane, 3 mm spacing, σ = 3 mm (computed by us):
 
 | CoP                        | CoP shift | Slip ratio (true 0.25) |
 | -------------------------- | --------- | ---------------------- |
