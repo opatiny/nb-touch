@@ -23,13 +23,13 @@ COP_RGBA = (1.0, 0.2, 0.2, 1.0)
 
 
 class ForceView(StrEnum):
-    """Which force the arrows show. Either way, a push is drawn outside the surface."""
+    """Which force the arrows show. Either way, the arrow starts at its point."""
 
     FORCE_ON_SENSOR = "force_on_sensor"
-    """The force acting on the sensor, ending at its point."""
+    """The force acting on the sensor: a push is drawn inside the surface."""
 
     SENSOR_REACTION_FORCE = "sensor_reaction_force"
-    """Its opposite, the force the sensor applies back, starting at its point."""
+    """Its opposite, the force the sensor applies back: a push is drawn outside."""
 
 
 def sensor_force_arrows(
@@ -53,7 +53,7 @@ def sensor_force_arrows(
     """
     if view == ForceView.SENSOR_REACTION_FORCE:
         return force_arrows(points, -np.asarray(forces, dtype=float), scale, min_force)
-    return force_arrows(points, forces, scale, min_force, tip_at_point=True)
+    return force_arrows(points, forces, scale, min_force)
 
 
 def draw_taxels(scene, positions, active=None, radius: float = 0.0004) -> int:

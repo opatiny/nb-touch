@@ -10,10 +10,12 @@ from nb_touch.geometry.synthetic import plane_sensor  # noqa: E402
 from nb_touch.viz.sensor import (  # noqa: E402
     ACTIVE_RGBA,
     TAXEL_RGBA,
+    ForceView,
     draw_contacts,
     draw_cop,
     draw_taxel_forces,
     draw_taxels,
+    sensor_force_arrows,
 )
 
 PLANE = plane_sensor(rows=3, cols=3)
@@ -33,6 +35,34 @@ def test_taxels_without_mask_all_plain(make_scene):
     scene = make_scene(20)
     draw_taxels(scene, PLANE.positions)
     assert all(scene.geoms[i].rgba == pytest.approx(TAXEL_RGBA) for i in range(9))
+
+
+def test_force_on_sensor_starts_at_point():
+    ((start, end),) = sensor_force_arrows([0, 0, 0], [0, 0, -2], scale=0.01)
+    assert start == pytest.approx([0, 0, 0])
+    assert end == pytest.approx([0, 0, -0.02])
+
+
+def test_reaction_force_starts_at_point_and_is_opposite():
+    ((start, end),) = sensor_force_arrows(
+        [0, 0, 0], [0, 0, -2], scale=0.01, view=ForceView.SENSOR_REACTION_FORCE
+    )
+    assert start == pytest.approx([0, 0, 0])
+    assert end == pytest.approx([0, 0, 0.02])
+
+
+def test_reaction_force_drops_small_forces():
+    forces = [[0, 0, -0.05], [0, 0, -1.0]]
+    arrows = sensor_force_arrows(
+        [[0, 0, 0], [1, 0, 0]], forces, 0.01, 0.1, ForceView.SENSOR_REACTION_FORCE
+    )
+    assert len(arrows) == 1
+
+
+def test_cop_drawn_as_reaction_force(make_scene):
+    scene = make_scene(10)
+    view = ForceView.SENSOR_REACTION_FORCE
+    assert draw_cop(scene, np.zeros(3), [0.0, 0.0, -2.0], 0.01, view=view) == 3
 
 
 def test_small_taxel_forces_skipped(make_scene):
