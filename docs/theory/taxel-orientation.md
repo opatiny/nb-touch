@@ -56,7 +56,7 @@ npz is numpy's own format: a zip of binary arrays, written with `np.savez_compre
 
 Sizes computed by us: 626,400 float64 values, and about 18 characters per number in JSON or CSV.
 
-YAML or JSON remain the choice for small files, such as [sensor geometry](../formats/sensor-geometry.md) and metadata.
+YAML or JSON remain the choice for small files, such as [sensor geometry](../taxel-geometry.md#file-format) and metadata.
 
 ## Kinematics
 

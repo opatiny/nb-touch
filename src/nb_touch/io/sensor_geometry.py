@@ -1,6 +1,6 @@
 """Reading and writing the sensor geometry YAML format.
 
-See `docs/formats/sensor-geometry.md`. Field checks adapted from `orca_core` (MIT,
+See `docs/taxel-geometry.md`. Field checks adapted from `orca_core` (MIT,
 ORCA Dexterity), `orca_core/hardware/sensing/taxel_geometry.py`, and rotation
 rounding from `dextHand`, `src/dexthand/touch/taxel_frames.py`.
 """
