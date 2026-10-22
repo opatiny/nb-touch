@@ -50,6 +50,9 @@ PATH_RADIUS_M = 0.003
 PERIOD_S = 8.0
 """Time for the true CoP to go once around its circle, in s."""
 
+MOVING = True
+"""False to keep the true CoP and CoP force still, at their position at time 0."""
+
 SETTINGS = ContactSettings(min_taxels=1)
 """Contact detection settings, see `ContactSettings` in
 `src/nb_touch/contact/contacts.py`. The same σ is used to make the taxel forces."""
@@ -159,8 +162,9 @@ def main() -> None:
         last_report = -1.0
         while viewer.is_running():
             now = time.monotonic() - start
-            cop, normal = true_cop(positions, normals, now)
-            cop_force = true_cop_force(normal, now)
+            time_s = now if MOVING else 0.0
+            cop, normal = true_cop(positions, normals, time_s)
+            cop_force = true_cop_force(normal, time_s)
             forces = taxel_forces(positions, normals, cop, normal, cop_force, rng)
             contacts = detector.update(forces, in_taxel_frames=False)
             with viewer.lock():
