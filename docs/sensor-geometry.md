@@ -1,4 +1,4 @@
-# Taxel geometry: load, save, process
+# Sensor geometry: load, save, process
 
 Taxel positions and orientations of a sensor: the file format to load and save them, and the utilities to process them.
 
