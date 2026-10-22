@@ -22,6 +22,7 @@ from nb_touch.geometry import normals_from_rotations
 from nb_touch.geometry.synthetic import synthetic_sensor
 from nb_touch.viz.markers import draw_spheres
 from nb_touch.viz.sensor import (
+    ForceView,
     draw_contacts,
     draw_cop,
     draw_taxel_forces,
@@ -58,6 +59,10 @@ COP_SCALE_M_PER_N = 0.006
 
 TAXEL_SCALE_M_PER_N = 0.02
 """Taxel force arrow length per newton, in m."""
+
+FORCE_VIEW = ForceView.FORCE_ON_SENSOR
+"""Arrows for the forces acting on the sensor, or for their opposite
+(`ForceView.SENSOR_REACTION_FORCE`)."""
 
 TRUE_RGBA = (0.2, 0.8, 0.2, 1.0)
 """Green: the true CoP and CoP force."""
@@ -114,9 +119,11 @@ def draw_frame(scene, positions, forces, contacts, cop, cop_force) -> None:
     for contact in contacts:
         active[contact.taxels] = True
     draw_taxels(scene, positions, active)
-    draw_taxel_forces(scene, positions, forces, TAXEL_SCALE_M_PER_N, NOISE_N * 3)
-    draw_cop(scene, cop, cop_force, COP_SCALE_M_PER_N, TRUE_RGBA)
-    draw_contacts(scene, contacts, COP_SCALE_M_PER_N)
+    draw_taxel_forces(
+        scene, positions, forces, TAXEL_SCALE_M_PER_N, NOISE_N * 3, FORCE_VIEW
+    )
+    draw_cop(scene, cop, cop_force, COP_SCALE_M_PER_N, TRUE_RGBA, FORCE_VIEW)
+    draw_contacts(scene, contacts, COP_SCALE_M_PER_N, FORCE_VIEW)
     # Sensor origin, for reference.
     draw_spheres(scene, [np.zeros(3)], 0.0003, (1.0, 1.0, 1.0, 1.0))
 
