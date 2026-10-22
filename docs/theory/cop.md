@@ -65,7 +65,7 @@ Source: `src/nb_touch/geometry/frames.py`; see also [Finding normal at taxel](..
 
 ## Default values
 
-The paper gives no value `sigma` and `regularisation`. By default, we set σ to be 1.5 times the median taxel spacing on the sensor. This ensures 8 point connectivity in a rectangular grid.
+The paper gives no value `sigma` and `regularisation`. By default, we set σ to be 1.5 times the median taxel spacing on the sensor. This ensures 8 point connectivity in a rectangular grid. The default value for `regularisation` is 1e-3. To learn more about that parameter, refer to [Estimating a good λ from the data](lambda-from-data.md).
 
 ## Known bias
 
