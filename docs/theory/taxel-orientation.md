@@ -44,21 +44,51 @@ N samples, J joints, T taxels.
 
 Sensor model, joint names, link the sensor is mounted on, sampling rate, date.
 
-### Why npz?
+## Reading and writing a recording
 
-npz is numpy's own format: a zip of binary arrays, written with `np.savez_compressed` and read with `np.load` ([numpy docs](https://numpy.org/doc/stable/reference/generated/numpy.savez_compressed.html)).
+Implemented in `src/nb_touch/io/recordings.py`, imported from `nb_touch.io`.
 
-|                                          | npz                | JSON                            | CSV                                            |
-| ---------------------------------------- | ------------------ | ------------------------------- | ---------------------------------------------- |
-| Size of the paper's 2400 × 87 × 3 forces | about 5 MB or less | about 11 MB                     | about 11 MB                                    |
-| Shapes and dtypes                        | kept               | lost (nested lists)             | lost, 2D only: forces flattened to 261 columns |
-| Precision, NaN                           | exact              | rounded, no NaN in the standard | rounded unless written at full precision       |
-| Human-readable                           | no                 | yes                             | yes, also in Excel                             |
-| Files per recording                      | one                | one                             | one per array, rows to keep aligned            |
+A recording holds N samples of J joints and T taxels: the sample times, joint angles, joint torques and taxel forces (each in its taxel's frame), plus metadata. Format: [Recording format](docs/theory/taxel-orientation.md#recording-format).
 
-Sizes computed by us: 626,400 float64 values, and about 18 characters per number in JSON or CSV.
+Save a recording of 3 samples (20 Hz), 2 joints and 2 taxels:
 
-YAML or JSON remain the choice for small files, such as [sensor geometry](../taxel-geometry.md#file-format) and metadata.
+```python
+from nb_touch.io import Recording, save_recording
+
+recording = Recording(
+    timestamps_s=[0.0, 0.05, 0.1],  # (N,), in s
+    joint_pos_rad=[[0.1, 0.2], [0.1, 0.3], [0.2, 0.3]],  # (N, J), in rad
+    joint_torque_nm=[[0.01, 0.02], [0.01, 0.03], [0.02, 0.03]],  # (N, J), in N·m
+    taxel_forces_n=[  # (N, T, 3), in N
+        [[0, 0, 0.5], [0, 0, 0.2]],
+        [[0, 0, 0.6], [0, 0, 0.3]],
+        [[0, 0, 0.7], [0, 0, 0.4]],
+    ],
+    metadata={"joint_names": ["mcp", "pip"]},
+)
+save_recording(recording, "results/recording")
+```
+
+Saved files:
+
+- `results/recording.npz`: the 4 arrays, `timestamps_s` (3,), `joint_pos_rad` (3, 2), `joint_torque_nm` (3, 2) and `taxel_forces_n` (3, 2, 3).
+- `results/recording.yaml`: the metadata.
+
+```yaml
+joint_names: [mcp, pip]
+```
+
+Load it back:
+
+```python
+from nb_touch.io import load_recording
+
+recording = load_recording("results/recording")
+recording.num_samples, recording.num_joints, recording.num_taxels  # (3, 2, 2)
+recording.taxel_forces_n[0]  # forces of both taxels in the first sample
+```
+
+`load_recording` raises a `FileNotFoundError` if one of the two files is missing, and a `ValueError` if an array is missing or the shapes disagree.
 
 ## Kinematics
 
