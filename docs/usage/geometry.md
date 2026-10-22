@@ -10,9 +10,17 @@ Sensor geometry utilities in `src/nb_touch/geometry/`, imported from `nb_touch.g
 
 For each taxel: list the taxels that are closer than a given distance. This distance is computed based on a factor multiplying the median distance between all taxels. Using `factor=1.5` ensures a taxel in a square grid has 8 neighbours and not only 4.
 
-Example: `taxel_neighbours(positions, factor=1.5)`
+Example, on a 3×3 grid:
 
-<!--- todo: improve example -->
+```python
+from nb_touch.geometry import taxel_neighbours
+from nb_touch.geometry.synthetic import plane_sensor
+
+sensor = plane_sensor(rows=3, cols=3)
+neighbours = taxel_neighbours(sensor.positions, factor=1.5)
+neighbours[4]  # centre taxel: array([0, 1, 2, 3, 5, 6, 7, 8])
+neighbours[0]  # corner taxel: array([1, 3, 4])
+```
 
 ## Rotation matrices and frame changes
 
@@ -30,4 +38,12 @@ Mock sensors are implemented, used for tests and in the examples. Use the functi
 
 The number of taxels as well as the spacing can be chosen. Example:
 
-<!--- todo -->
+```python
+from nb_touch.geometry.synthetic import synthetic_sensor
+
+sensor = synthetic_sensor("cylinder", num_taxels=40, spacing=0.003, radius=0.01)
+sensor.positions  # (40, 3), in m
+sensor.rotations  # (40, 3, 3), taxel frames to sensor frame
+```
+
+`spacing` (in m) applies to the plane and cylinder only, `radius` (in m) to the cylinder and sphere.
