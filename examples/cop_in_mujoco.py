@@ -29,41 +29,44 @@ from nb_touch.viz.sensor import (
     draw_taxels,
 )
 
-SHAPE = "sphere"
+# simulation options
+SHAPE = "plane"
 """Synthetic sensor: "plane", "cylinder" or "sphere"."""
 
-NUM_TAXELS = 80
+NUM_TAXELS = 25
 """Number of taxels."""
 
-NORMAL_FORCE_N = 2.0
+NORMAL_FORCE_N = 1
 """Push of the true CoP force, against the outward normal, in N."""
 
-SHEAR_FORCE_N = 0.5
+SHEAR_FORCE_N = 0
 """Shear part of the true CoP force, in N. Its direction turns over time."""
 
-NOISE_N = 0.02
+NOISE_N = 0.0
 """Standard deviation of the noise added to each taxel force component, in N."""
 
-PATH_RADIUS_M = 0.003
+PATH_RADIUS_M = 0.00
 """Radius of the circle the true CoP follows, seen from above, in m."""
 
 PERIOD_S = 8.0
 """Time for the true CoP to go once around its circle, in s."""
 
-MOVING = True
+MOVING = False
 """False to keep the true CoP and CoP force still, at their position at time 0."""
 
-SETTINGS = ContactSettings(min_taxels=1)
+# contact settings
+SETTINGS = ContactSettings(min_taxels=1, sigma=0.01, regularisation=0.05)
 """Contact detection settings, see `ContactSettings` in
 `src/nb_touch/contact/contacts.py`. The same σ is used to make the taxel forces."""
 
+# display options
 COP_SCALE_M_PER_N = 0.006
 """CoP force arrow length per newton, in m."""
 
 TAXEL_SCALE_M_PER_N = 0.02
 """Taxel force arrow length per newton, in m."""
 
-FORCE_VIEW = ForceView.FORCE_ON_SENSOR
+FORCE_VIEW = ForceView.SENSOR_REACTION_FORCE
 """Arrows for the forces acting on the sensor, or for their opposite
 (`ForceView.SENSOR_REACTION_FORCE`)."""
 
