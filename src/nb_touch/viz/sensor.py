@@ -99,7 +99,7 @@ def draw_taxel_forces(
     """
     arrows = sensor_force_arrows(positions, forces, scale, min_force, view)
     return draw_arrows(
-        scene, arrows, TAXEL_FORCE_RGBA, thickness=0.0003, head_length=0.0008
+        scene, arrows, TAXEL_FORCE_RGBA, thickness=0.0003, head_length=0.002
     )
 
 
@@ -127,7 +127,7 @@ def draw_cop(
     before = scene.ngeom
     draw_spheres(scene, [cop], 0.0007, rgba)
     arrows = sensor_force_arrows(cop, cop_force, scale, view=view)
-    draw_arrows(scene, arrows, rgba, 0.0008, 0.0025)
+    draw_arrows(scene, arrows, rgba, 0.0008, 0.01)
     return scene.ngeom - before
 
 
