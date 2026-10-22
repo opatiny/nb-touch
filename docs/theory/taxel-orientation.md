@@ -48,7 +48,7 @@ Sensor model, joint names, link the sensor is mounted on, sampling rate, date.
 
 Implemented in `src/nb_touch/io/recordings.py`, imported from `nb_touch.io`.
 
-A recording holds N samples of J joints and T taxels: the sample times, joint angles, joint torques and taxel forces (each in its taxel's frame), plus metadata. Format: [Recording format](docs/theory/taxel-orientation.md#recording-format).
+A recording holds N samples of J joints and T taxels: the sample times, joint angles, joint torques and taxel forces (each in its taxel's frame), plus metadata. Format: [Recording format](#recording-format).
 
 Save a recording of 3 samples (20 Hz), 2 joints and 2 taxels:
 
