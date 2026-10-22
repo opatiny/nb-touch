@@ -57,28 +57,34 @@ print(contacts[0].cop_force)  # [ 0.  0. -1.]
 With a 1 N push at the centre:
 
 ```python
-from nb_touch.contact import cop_normal, cop_to_taxel_forces, taxel_force_matrices
+from nb_touch.contact import (
+    cop_normal,
+    cop_to_taxel_forces,
+    spacing_sigma,
+    taxel_force_matrices,
+)
 from nb_touch.geometry import normals_from_rotations
 
 normals = normals_from_rotations(sensor.rotations)
 cop = np.zeros(3)
 normal = cop_normal(sensor.positions, normals, cop)
-matrices = taxel_force_matrices(sensor.positions, normals, cop, normal)
+sigma = spacing_sigma(sensor.positions)  # 1.5 x the median taxel spacing
+matrices = taxel_force_matrices(sensor.positions, normals, cop, normal, sigma)
 print(cop_to_taxel_forces([0.0, 0.0, -1.0], matrices))
 ```
 
 Expected print, one row per taxel:
 
 ```text
-[[-0.225 -0.225 -0.185]
- [ 0.    -0.33  -0.509]
- [ 0.225 -0.225 -0.185]
- [-0.33   0.    -0.509]
+[[-0.221 -0.221 -0.56 ]
+ [ 0.    -0.193 -0.777]
+ [ 0.221 -0.221 -0.56 ]
+ [-0.193  0.    -0.777]
  [ 0.     0.    -1.   ]
- [ 0.33   0.    -0.509]
- [-0.225  0.225 -0.185]
- [ 0.     0.33  -0.509]
- [ 0.225  0.225 -0.185]]
+ [ 0.193  0.    -0.777]
+ [-0.221  0.221 -0.56 ]
+ [ 0.     0.193 -0.777]
+ [ 0.221  0.221 -0.56 ]]
 ```
 
 The centre taxel gets the whole push. The others get less the further they are, tilted away from the CoP.
@@ -87,7 +93,7 @@ For more details, see [docs/theory/cop.md](docs/theory/cop.md).
 
 ## CoP examples
 
-An example script for the taxel to CoP conversion can be found in `examples/cop_in_mujoco.py`. It provides the taxel-CoP mapping on a synthetic sensor, shown in MuJoCo. Run it in an activated terminal with `python examples/cop-in-mujoco.py`.
+An example script for the taxel to CoP conversion can be found in `examples/cop_in_mujoco.py`. It provides the taxel-CoP mapping on a synthetic sensor, shown in MuJoCo. Run it in an activated terminal with `python examples/cop_in_mujoco.py`.
 
 It shows:
 
