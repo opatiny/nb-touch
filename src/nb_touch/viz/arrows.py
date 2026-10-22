@@ -9,7 +9,7 @@ import numpy as np
 
 
 def force_arrows(
-    starts, forces, scale: float, min_force: float = 0.0
+    starts, forces, scale: float, min_force: float = 0.0, tip_at_point: bool = False
 ) -> list[tuple[np.ndarray, np.ndarray]]:
     """Turn forces applied at points into arrow segments.
 
@@ -19,6 +19,8 @@ def force_arrows(
         scale: Arrow length per newton, in metres.
         min_force: Forces with a smaller magnitude get no arrow, which keeps
             sensor noise off the screen.
+        tip_at_point: True to end each arrow at its point instead of starting it
+            there, so a push on a surface is drawn outside it.
 
     Returns:
         One ``(start, end)`` pair per arrow drawn.
@@ -26,10 +28,13 @@ def force_arrows(
     starts = np.atleast_2d(np.asarray(starts, dtype=float))
     forces = np.atleast_2d(np.asarray(forces, dtype=float))
     keep = np.linalg.norm(forces, axis=1) >= min_force
-    return [
+    arrows = [
         (start, start + force * scale)
         for start, force in zip(starts[keep], forces[keep])
     ]
+    if tip_at_point:
+        return [(2 * start - end, start) for start, end in arrows]
+    return arrows
 
 
 def add_connector(scene, geom_type, start, end, thickness: float, rgba) -> bool:

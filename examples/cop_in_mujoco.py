@@ -35,7 +35,7 @@ NUM_TAXELS = 80
 """Number of taxels."""
 
 NORMAL_FORCE_N = 2.0
-"""Normal part of the true CoP force, in N."""
+"""Push of the true CoP force, against the outward normal, in N."""
 
 SHEAR_FORCE_N = 0.5
 """Shear part of the true CoP force, in N. Its direction turns over time."""
@@ -88,7 +88,8 @@ def true_cop(positions, normals, time_s: float) -> tuple[np.ndarray, np.ndarray]
 
 
 def true_cop_force(normal, time_s: float) -> np.ndarray:
-    """Return the true CoP force: a push along `normal` plus a turning shear."""
+    """Return the true CoP force: a push against the outward `normal` plus a
+    turning shear."""
     across = np.cross(normal, [1.0, 0.0, 0.0])
     if np.linalg.norm(across) < 1e-6:
         across = np.cross(normal, [0.0, 1.0, 0.0])
@@ -96,7 +97,7 @@ def true_cop_force(normal, time_s: float) -> np.ndarray:
     other = np.cross(normal, across)
     angle = 2 * np.pi * time_s / (PERIOD_S / 3)
     shear = np.cos(angle) * across + np.sin(angle) * other
-    return NORMAL_FORCE_N * normal + SHEAR_FORCE_N * shear
+    return -NORMAL_FORCE_N * normal + SHEAR_FORCE_N * shear
 
 
 def taxel_forces(positions, normals, cop, normal, cop_force, rng) -> np.ndarray:

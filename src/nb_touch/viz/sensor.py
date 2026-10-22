@@ -1,6 +1,8 @@
 """Draw a sensor's taxels, taxel forces and contacts in a MuJoCo scene, such as a
 passive viewer's `user_scn`. Positions and forces in the scene's world frame."""
 
+from enum import StrEnum
+
 import numpy as np
 
 from nb_touch.contact.contacts import Contact
@@ -18,6 +20,40 @@ TAXEL_FORCE_RGBA = (0.2, 0.5, 1.0, 1.0)
 
 COP_RGBA = (1.0, 0.2, 0.2, 1.0)
 """Red: CoPs and CoP forces estimated from the taxel forces."""
+
+
+class ForceView(StrEnum):
+    """Which force the arrows show. Either way, a push is drawn outside the surface."""
+
+    FORCE_ON_SENSOR = "force_on_sensor"
+    """The force acting on the sensor, ending at its point."""
+
+    SENSOR_REACTION_FORCE = "sensor_reaction_force"
+    """Its opposite, the force the sensor applies back, starting at its point."""
+
+
+def sensor_force_arrows(
+    points,
+    forces,
+    scale: float,
+    min_force: float = 0.0,
+    view: ForceView = ForceView.FORCE_ON_SENSOR,
+) -> list[tuple[np.ndarray, np.ndarray]]:
+    """Turn forces acting on the sensor into arrow segments, see `ForceView`.
+
+    Args:
+        points: Application points `(3,)` or `(n, 3)`, in m.
+        forces: Forces acting on the sensor, same shape, in N.
+        scale: Arrow length per newton, in m.
+        min_force: Smaller forces get no arrow, in N.
+        view: Which force to draw.
+
+    Returns:
+        One `(start, end)` pair per arrow drawn.
+    """
+    if view == ForceView.SENSOR_REACTION_FORCE:
+        return force_arrows(points, -np.asarray(forces, dtype=float), scale, min_force)
+    return force_arrows(points, forces, scale, min_force, tip_at_point=True)
 
 
 def draw_taxels(scene, positions, active=None, radius: float = 0.0004) -> int:
@@ -41,9 +77,14 @@ def draw_taxels(scene, positions, active=None, radius: float = 0.0004) -> int:
 
 
 def draw_taxel_forces(
-    scene, positions, forces, scale: float, min_force: float = 0.0
+    scene,
+    positions,
+    forces,
+    scale: float,
+    min_force: float = 0.0,
+    view: ForceView = ForceView.FORCE_ON_SENSOR,
 ) -> int:
-    """Draw one arrow per taxel force, starting at the taxel.
+    """Draw one arrow per taxel force, see `ForceView`.
 
     Args:
         scene: `MjvScene` to draw into, in place.
@@ -51,18 +92,26 @@ def draw_taxel_forces(
         forces: Taxel forces `(n, 3)` in the same frame, in N.
         scale: Arrow length per newton, in m.
         min_force: Smaller forces get no arrow, in N.
+        view: Which force to draw.
 
     Returns:
         The number of arrows drawn.
     """
-    arrows = force_arrows(positions, forces, scale, min_force)
+    arrows = sensor_force_arrows(positions, forces, scale, min_force, view)
     return draw_arrows(
         scene, arrows, TAXEL_FORCE_RGBA, thickness=0.0003, head_length=0.0008
     )
 
 
-def draw_cop(scene, cop, cop_force, scale: float, rgba=COP_RGBA) -> int:
-    """Draw a CoP as a sphere and its force as an arrow starting at it.
+def draw_cop(
+    scene,
+    cop,
+    cop_force,
+    scale: float,
+    rgba=COP_RGBA,
+    view: ForceView = ForceView.FORCE_ON_SENSOR,
+) -> int:
+    """Draw a CoP as a sphere and its force as an arrow, see `ForceView`.
 
     Args:
         scene: `MjvScene` to draw into, in place.
@@ -70,22 +119,30 @@ def draw_cop(scene, cop, cop_force, scale: float, rgba=COP_RGBA) -> int:
         cop_force: CoP force `(3,)`, in N.
         scale: Arrow length per newton, in m.
         rgba: Color.
+        view: Which force to draw.
 
     Returns:
         The number of geoms drawn.
     """
     before = scene.ngeom
     draw_spheres(scene, [cop], 0.0007, rgba)
-    draw_arrows(scene, force_arrows(cop, cop_force, scale), rgba, 0.0008, 0.0025)
+    arrows = sensor_force_arrows(cop, cop_force, scale, view=view)
+    draw_arrows(scene, arrows, rgba, 0.0008, 0.0025)
     return scene.ngeom - before
 
 
-def draw_contacts(scene, contacts: list[Contact], scale: float) -> int:
+def draw_contacts(
+    scene,
+    contacts: list[Contact],
+    scale: float,
+    view: ForceView = ForceView.FORCE_ON_SENSOR,
+) -> int:
     """Draw every contact's CoP and CoP force, see `draw_cop`.
 
     Returns:
         The number of geoms drawn.
     """
     return sum(
-        draw_cop(scene, contact.cop, contact.cop_force, scale) for contact in contacts
+        draw_cop(scene, contact.cop, contact.cop_force, scale, view=view)
+        for contact in contacts
     )

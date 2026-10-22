@@ -46,10 +46,11 @@ class Contact:
         taxels: Indices of the contact's taxels.
         cop: CoP position `(3,)`, in m.
         normal: Unit outward surface normal at the CoP `(3,)`.
-        cop_force: CoP force `(3,)` from the model's ridge solve, in N, positive
-            along `normal` for a push.
+        cop_force: CoP force `(3,)` from the model's ridge solve, in N, acting on
+            the sensor: against `normal` for a push.
         total_force: Sum of the taxel forces `(3,)`, in N.
-        normal_force: Part of `cop_force` along `normal`, in N.
+        normal_force: Push of `cop_force`, `-cop_force · normal`, in N: positive
+            for a push, negative for a pull.
         shear_force: Norm of the part of `cop_force` across `normal`, in N.
         slip_ratio: `shear_force / normal_force`, NaN when the normal force is not
             positive. The contact slips once it reaches the friction coefficient.
@@ -78,18 +79,19 @@ def split_force(force, normal) -> tuple[float, float, float]:
     """Split a force into its part along a normal and its part across it.
 
     Args:
-        force: Force `(3,)`, in N: a push into the sensor points along the outward
-            normal.
+        force: Force `(3,)` acting on the sensor, in N: a push points against the
+            outward normal.
         normal: Unit outward normal `(3,)`.
 
     Returns:
-        `(normal_force, shear_force, slip_ratio)`, the ratio NaN when the normal force
-        is not positive. All NaN when `normal` is.
+        `(normal_force, shear_force, slip_ratio)`, the normal force `-force · normal`
+        positive for a push, the ratio NaN when the normal force is not positive.
+        All NaN when `normal` is.
     """
     force = np.asarray(force, dtype=float)
     normal = np.asarray(normal, dtype=float)
-    normal_force = float(force @ normal)
-    shear_force = float(np.linalg.norm(force - normal_force * normal))
+    normal_force = float(-force @ normal)
+    shear_force = float(np.linalg.norm(force + normal_force * normal))
     ratio = shear_force / normal_force if normal_force > 0.0 else float("nan")
     return normal_force, shear_force, ratio
 

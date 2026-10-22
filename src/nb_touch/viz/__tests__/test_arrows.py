@@ -12,6 +12,12 @@ def test_force_arrows_scale_the_force():
     assert end == pytest.approx([1, 1, 1.02])
 
 
+def test_force_arrows_can_end_at_the_point():
+    ((start, end),) = force_arrows([1, 1, 1], [0, 0, -2], scale=0.01, tip_at_point=True)
+    assert start == pytest.approx([1, 1, 1.02])
+    assert end == pytest.approx([1, 1, 1])
+
+
 def test_force_arrows_drop_small_forces():
     starts = [[0, 0, 0], [1, 0, 0], [2, 0, 0]]
     forces = [[0.01, 0, 0], [0, 0.5, 0], [0, 0, -0.05]]

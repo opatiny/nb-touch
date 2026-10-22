@@ -2,7 +2,9 @@
 forces and back. See `docs/theory/cop.md`.
 
 All vectors are in the sensor frame: taxel forces must be rotated from their taxel
-frames first (`rotate_vectors`).
+frames first (`rotate_vectors`). Forces act on the sensor, so a push points against
+the outward normals; the paper's inward normals are their opposites. See
+Conventions in `README.md`.
 """
 
 import numpy as np
@@ -86,7 +88,7 @@ def blended_directions(positions, normals, cop, weights) -> np.ndarray:
 
     Args:
         positions: Taxel positions `(n, 3)`, in m.
-        normals: Unit outward taxel normals `(n, 3)`.
+        normals: Unit inward taxel normals `(n, 3)`, as in the paper.
         cop: CoP position `(3,)`, in m.
         weights: Gaussian weights `(n,)`.
 
@@ -113,20 +115,26 @@ def taxel_force_matrices(
 ) -> np.ndarray:
     """Return `M_i = w_i (b_i n_cop^T + P_shear)` for every taxel, so `f_i = M_i f_cop`.
 
+    `n_i` and `n_cop` are the paper's inward normals, the opposites of `normals` and
+    `normal`.
+
     Args:
         positions: Taxel positions `(n, 3)`, in m.
         normals: Unit outward taxel normals `(n, 3)`.
         cop: CoP position `(3,)`, in m.
-        normal: Unit normal at the CoP `(3,)`.
+        normal: Unit outward normal at the CoP `(3,)`.
         sigma: Spread of the Gaussian weights, in m.
 
     Returns:
         Matrices `(n, 3, 3)`.
     """
+    inward = -np.asarray(normal, dtype=float)
     weights = gaussian_weights(positions, cop, sigma)
-    directions = blended_directions(positions, normals, cop, weights)
-    normal_part = directions[:, :, None] * np.asarray(normal, dtype=float)[None, None]
-    return weights[:, None, None] * (normal_part + shear_projector(normal))
+    directions = blended_directions(
+        positions, -np.asarray(normals, dtype=float), cop, weights
+    )
+    normal_part = directions[:, :, None] * inward[None, None]
+    return weights[:, None, None] * (normal_part + shear_projector(inward))
 
 
 def cop_to_taxel_forces(cop_force, matrices) -> np.ndarray:

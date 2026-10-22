@@ -23,7 +23,7 @@ def sphere_push(taxel, cop_force):
 
 
 def test_taxel_frame_forces_match_sensor_frame_result():
-    forces = sphere_push(0, 2.0 * NORMALS[0])
+    forces = sphere_push(0, -2.0 * NORMALS[0])
     local = rotate_vectors(SPHERE.rotations.transpose(0, 2, 1), forces)
     detector = ContactDetector(SPHERE)
     from_local = detector.update(local, in_taxel_frames=True)
@@ -45,7 +45,7 @@ def test_missing_rotations_are_estimated():
 
 
 def test_filter_delays_contact():
-    forces = sphere_push(0, 2.0 * NORMALS[0])
+    forces = sphere_push(0, -2.0 * NORMALS[0])
     settings = ContactSettings()
     detector = ContactDetector(SPHERE, settings, Debounce(settings.threshold, 2))
     assert detector.update(forces, in_taxel_frames=False) == []

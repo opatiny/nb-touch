@@ -28,11 +28,11 @@ def push(taxel, cop_force, sigma=0.003):
 
 
 def test_split_force():
-    assert split_force([3.0, 0.0, 4.0], UP) == pytest.approx((4.0, 3.0, 0.75))
+    assert split_force([3.0, 0.0, -4.0], UP) == pytest.approx((4.0, 3.0, 0.75))
 
 
 def test_split_force_pull_has_nan_ratio():
-    normal_force, _, ratio = split_force([0.0, 0.0, -1.0], UP)
+    normal_force, _, ratio = split_force([0.0, 0.0, 1.0], UP)
     assert normal_force == -1.0
     assert np.isnan(ratio)
 
@@ -43,13 +43,13 @@ def test_split_force_nan_normal():
 
 def test_centred_normal_push_recovered():
     contacts = find_contacts(
-        PLANE.positions, NORMALS, push(CENTRE, [0, 0, 2.0]), NEIGHBOURS
+        PLANE.positions, NORMALS, push(CENTRE, [0, 0, -2.0]), NEIGHBOURS
     )
     assert len(contacts) == 1
     contact = contacts[0]
     np.testing.assert_allclose(contact.cop, PLANE.positions[CENTRE], atol=1e-12)
     np.testing.assert_allclose(contact.normal, UP)
-    np.testing.assert_allclose(contact.cop_force, [0, 0, 2.0], rtol=1e-5, atol=1e-12)
+    np.testing.assert_allclose(contact.cop_force, [0, 0, -2.0], rtol=1e-5, atol=1e-12)
     assert contact.normal_force == pytest.approx(2.0, rel=1e-5)
     assert contact.shear_force == pytest.approx(0.0, abs=1e-9)
     assert CENTRE in contact.taxels
@@ -59,7 +59,7 @@ def test_sheared_push_moves_cop_towards_shear():
     # Shear makes the taxel force norms asymmetric, so the force-weighted CoP moves:
     # a property of the paper's CoP estimate, not of the solve.
     contact = find_contacts(
-        PLANE.positions, NORMALS, push(CENTRE, [0.5, 0, 2.0]), NEIGHBOURS
+        PLANE.positions, NORMALS, push(CENTRE, [0.5, 0, -2.0]), NEIGHBOURS
     )[0]
     shift = contact.cop - PLANE.positions[CENTRE]
     assert 0 < shift[0] < 0.001
@@ -72,14 +72,14 @@ def test_sheared_push_moves_cop_towards_shear():
 )
 def test_sheared_push_slip_ratio_within_10_percent():
     contact = find_contacts(
-        PLANE.positions, NORMALS, push(CENTRE, [0.5, 0, 2.0]), NEIGHBOURS
+        PLANE.positions, NORMALS, push(CENTRE, [0.5, 0, -2.0]), NEIGHBOURS
     )[0]
     assert contact.slip_ratio == pytest.approx(0.25, rel=0.1)
 
 
 def test_two_pushes_give_two_contacts_strongest_first():
     # Taxels 20 and 60: rows and columns 2 and 6 of the 9 x 9 grid.
-    forces = push(20, [0, 0, 1.0]) + push(60, [0, 0, 3.0])
+    forces = push(20, [0, 0, -1.0]) + push(60, [0, 0, -3.0])
     contacts = find_contacts(PLANE.positions, NORMALS, forces, NEIGHBOURS)
     assert len(contacts) == 2
     np.testing.assert_allclose(contacts[0].cop, PLANE.positions[60], atol=1e-4)
@@ -116,7 +116,7 @@ def test_zero_threshold_ignores_all_zero_zone():
 
 
 def test_total_force_is_sum_of_zone_forces():
-    forces = push(CENTRE, [0, 0, 2.0])
+    forces = push(CENTRE, [0, 0, -2.0])
     contact = find_contacts(PLANE.positions, NORMALS, forces, NEIGHBOURS)[0]
     np.testing.assert_allclose(contact.total_force, forces[contact.taxels].sum(axis=0))
 
@@ -125,7 +125,10 @@ def test_contact_on_sphere_has_outward_normal():
     sensor = sphere_sensor(radius=0.01, count=60)
     normals = normals_from_rotations(sensor.rotations)
     taxels = np.arange(sensor.num_taxels)
-    forces = 0.5 * normals
+    top = int(np.argmax(sensor.positions[:, 2]))
+    cop = sensor.positions[top]
+    matrices = taxel_force_matrices(sensor.positions, normals, cop, normals[top])
+    forces = cop_to_taxel_forces(-0.5 * normals[top], matrices)
     contact = contact_from_taxels(taxels, sensor.positions, normals, forces)
     assert contact.normal[2] > 0.99
     assert contact.normal_force > 0
