@@ -25,10 +25,22 @@ $\lambda^2 = 3 \hat\sigma_n^2 / |\hat f|^2$
 
 However, the **ground truth** for the optimal lambda could be found experimentally. Use known loads (for example a force sensor during calibration) and take the $\lambda$ minimising the error on $f_{cop}$.
 
-## When the value of lambda matters?
+## When does the value of lambda matter?
 
-Not worth it with the default spread of the Gaussian weights, $\sigma$ = 1.5 times the median taxel spacing ([Default values](cop.md#default-values)), so 4.5 mm on a 3 mm grid. $\sigma$ is not the taxel noise $\sigma_n$: it sets the weight $w_i = \exp(-\|p_i - p_{cop}\|^2 / (2\sigma^2))$ of taxel $i$, with $p_i$ its position and $p_{cop}$ the CoP.
+Only when $\sigma$ is small compared with the taxel spacing $s$. With $e$ the smallest eigenvalue of $A^T A$:
 
-- The eigenvalues $e$ of $A^T A$ are at least about 2 (9×9 plane, 3 mm spacing, σ = 4.5 mm, zones of 3 to 81 taxels, computed by us with `src/nb_touch/contact/cop_model.py`).
-- Along each eigenvector, the solve shrinks $f_{cop}$ by $\lambda^2 / (e + \lambda^2)$: below 1% for any $\lambda \le 0.1$.
-- A data-driven $\lambda$ only pays off when all $w_i \approx 0$: with $\sigma$ much smaller than the taxel spacing, or zones far from every taxel.
+- Ridge shrinks $f_{cop}$ by a factor $\lambda^2 / (e + \lambda^2)$ along the matching eigenvector.
+- Noise on $b$ is amplified by $\sqrt{e} / (e + \lambda^2)$ along it, so $1 / \sqrt{e}$ for $\lambda = 0$.
+- So $\lambda$ only matters when $\lambda^2$ is not negligible against $e$.
+
+Smallest $e$ on a 9×9 plane, $s$ = 3 mm, CoP between taxels, zones of 3 to 81 taxels (computed by us with `src/nb_touch/contact/cop_model.py`):
+
+| $\sigma$          | Smallest $e$       |
+| ----------------- | ------------------ |
+| 1.5 $s$ (default) | 1.67               |
+| $s$               | 0.83               |
+| 0.5 $s$           | 0.05               |
+| 0.33 $s$          | $1.3\cdot10^{-3}$  |
+| 0.17 $s$          | $4.6\cdot10^{-12}$ |
+
+With the default $\sigma$ and $\lambda = 10^{-3}$, the shrinkage is below $10^{-6}$: the value of $\lambda$ does not matter. It starts to matter for $\sigma \lesssim s/3$, where every $w_i \approx 0$.
