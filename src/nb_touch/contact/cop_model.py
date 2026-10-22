@@ -139,6 +139,27 @@ def cop_to_taxel_forces(cop_force, matrices) -> np.ndarray:
     return np.asarray(matrices, dtype=float) @ np.asarray(cop_force, dtype=float)
 
 
+def cop_force_operator(matrices, regularisation: float = REGULARISATION) -> np.ndarray:
+    """Return the ridge solve `K = (A^T A + λ^2 I)^-1 A^T`, with `A` stacking the
+    `M_i`, split per taxel: `f_cop = sum_i K_i f_i`.
+
+    Args:
+        matrices: `M_i` `(n, 3, 3)`, from `taxel_force_matrices`.
+        regularisation: λ. With 0, the pseudo-inverse of `A`, giving the
+            minimum-norm least-squares solution even when `A^T A` is singular.
+
+    Returns:
+        `K_i` `(n, 3, 3)`.
+    """
+    stacked = np.asarray(matrices, dtype=float).reshape(-1, 3)
+    if regularisation == 0:
+        operator = np.linalg.pinv(stacked)
+    else:
+        gram = stacked.T @ stacked + regularisation**2 * np.eye(3)
+        operator = np.linalg.solve(gram, stacked.T)
+    return operator.reshape(3, -1, 3).transpose(1, 0, 2)
+
+
 def taxel_to_cop_force(
     forces, matrices, regularisation: float = REGULARISATION
 ) -> np.ndarray:
@@ -154,9 +175,5 @@ def taxel_to_cop_force(
     Returns:
         The CoP force `(3,)`, in N. Zero when there is no taxel.
     """
-    stacked = np.asarray(matrices, dtype=float).reshape(-1, 3)
-    measured = np.asarray(forces, dtype=float).reshape(-1)
-    if regularisation == 0:
-        return np.linalg.lstsq(stacked, measured, rcond=None)[0]
-    gram = stacked.T @ stacked + regularisation**2 * np.eye(3)
-    return np.linalg.solve(gram, stacked.T @ measured)
+    operators = cop_force_operator(matrices, regularisation)
+    return np.einsum("nij,nj->i", operators, np.asarray(forces, dtype=float))
