@@ -22,7 +22,8 @@ class ContactDetector:
 
     Args:
         geometry: Sensor geometry.
-        settings: Detection settings.
+        settings: Detection settings. A None `sigma` becomes `sigma_factor`
+            times the median taxel spacing of the sensor.
         active_filter: Filter deciding which taxels are in contact, with an
             `update(norms)` method (`nb_touch.contact.filters`). Default: plain
             threshold at `settings.threshold`.
@@ -39,7 +40,7 @@ class ContactDetector:
         self.rotations = geometry.rotations
         self.normals = normals_from_rotations(geometry.rotations)
         self.neighbours = taxel_neighbours(geometry.positions)
-        self.settings = settings
+        self.settings = settings.from_geometry(geometry.positions)
         self.filter = active_filter or ThresholdFilter(settings.threshold)
 
     def update(self, forces, *, in_taxel_frames: bool) -> list[Contact]:

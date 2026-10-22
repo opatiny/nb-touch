@@ -137,6 +137,7 @@ def synthetic_recording(
     """
     positions = geometry.positions
     normals = normals_from_rotations(geometry.rotations)
+    settings = settings.from_geometry(positions)
     forces, torques = [], []
     for taxel in rng.integers(len(positions), size=num_samples):
         cop = positions[taxel]

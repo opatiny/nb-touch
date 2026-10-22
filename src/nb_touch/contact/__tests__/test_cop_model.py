@@ -2,12 +2,14 @@ import numpy as np
 import pytest
 
 from nb_touch.contact.cop_model import (
+    SIGMA_M,
     blended_directions,
     cop_normal,
     cop_position,
     cop_to_taxel_forces,
     gaussian_weights,
     shear_projector,
+    spacing_sigma,
     taxel_force_matrices,
     taxel_to_cop_force,
     unit,
@@ -99,7 +101,7 @@ def test_shear_projector():
 def test_matrix_at_cop_is_identity_on_plane():
     # At the CoP w = 1 and b = n, so M = n n^T + I - n n^T = I.
     matrices = taxel_force_matrices(
-        PLANE.positions, PLANE_NORMALS, PLANE.positions[12], UP
+        PLANE.positions, PLANE_NORMALS, PLANE.positions[12], UP, 0.003
     )
     np.testing.assert_allclose(matrices[12], np.eye(3), atol=1e-12)
 
@@ -127,7 +129,7 @@ def test_cop_outside_array_still_recovered_without_regularisation():
 
 def test_regularisation_shrinks_force():
     cop = PLANE.positions[12]
-    matrices = taxel_force_matrices(PLANE.positions, PLANE_NORMALS, cop, UP)
+    matrices = taxel_force_matrices(PLANE.positions, PLANE_NORMALS, cop, UP, 0.003)
     forces = cop_to_taxel_forces([0.0, 0.0, 1.0], matrices)
     small = taxel_to_cop_force(forces, matrices, 1e-3)
     large = taxel_to_cop_force(forces, matrices, 1e3)
@@ -149,3 +151,12 @@ def test_tiny_sigma_away_from_taxels_gives_zero_force():
 def test_no_taxel_gives_zero_force(regularisation):
     force = taxel_to_cop_force(np.zeros((0, 3)), np.zeros((0, 3, 3)), regularisation)
     np.testing.assert_allclose(force, 0.0)
+
+
+def test_spacing_sigma_is_factor_times_median_spacing():
+    assert spacing_sigma(PLANE.positions) == pytest.approx(1.5 * 0.003)
+    assert spacing_sigma(PLANE.positions, factor=1.0) == pytest.approx(0.003)
+
+
+def test_spacing_sigma_of_single_taxel_is_default():
+    assert spacing_sigma(np.zeros((1, 3))) == SIGMA_M

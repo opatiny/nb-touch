@@ -10,10 +10,14 @@ Conventions in `README.md`.
 import numpy as np
 
 from nb_touch.contact.active import taxel_norms
+from nb_touch.geometry.neighbours import taxel_spacing
 
 SIGMA_M = 0.003
-"""Spread σ of the Gaussian weights, in m. Our choice, about one taxel spacing on
-the ORCA sensors: the paper gives no value."""
+"""Spread σ of the Gaussian weights for a sensor of a single taxel, which has no
+spacing, in m. Our choice, about one taxel spacing on the ORCA sensors."""
+
+SIGMA_SPACING_FACTOR = 1.5
+"""Default σ over the median taxel spacing of the sensor, no unit. Our choice."""
 
 REGULARISATION = 1e-3
 """Ridge regularisation λ of the CoP force solve, no unit. Our choice: the paper
@@ -70,7 +74,20 @@ def cop_normal(positions, normals, cop) -> np.ndarray:
     return total / length if length > 0.0 else np.full(3, np.nan)
 
 
-def gaussian_weights(positions, cop, sigma: float = SIGMA_M) -> np.ndarray:
+def spacing_sigma(positions, factor: float = SIGMA_SPACING_FACTOR) -> float:
+    """Return the default spread σ of a sensor: `factor` times its median taxel
+    spacing, or `SIGMA_M` for a single taxel. The paper gives no value.
+
+    Args:
+        positions: Taxel positions `(n, 3)` of the whole sensor, in m.
+        factor: σ over the median taxel spacing.
+    """
+    if len(positions) < 2:
+        return SIGMA_M
+    return factor * taxel_spacing(np.asarray(positions, dtype=float))
+
+
+def gaussian_weights(positions, cop, sigma: float) -> np.ndarray:
     """Return `w_i = exp(-||p_i - p_cop||^2 / (2 σ^2))` for every taxel, `(n,)`.
 
     Raises:
@@ -111,7 +128,7 @@ def shear_projector(normal) -> np.ndarray:
 
 
 def taxel_force_matrices(
-    positions, normals, cop, normal, sigma: float = SIGMA_M
+    positions, normals, cop, normal, sigma: float
 ) -> np.ndarray:
     """Return `M_i = w_i (b_i n_cop^T + P_shear)` for every taxel, so `f_i = M_i f_cop`.
 
@@ -123,7 +140,8 @@ def taxel_force_matrices(
         normals: Unit outward taxel normals `(n, 3)`.
         cop: CoP position `(3,)`, in m.
         normal: Unit outward normal at the CoP `(3,)`.
-        sigma: Spread of the Gaussian weights, in m.
+        sigma: Spread of the Gaussian weights, in m, for example from
+            `spacing_sigma` of the whole sensor.
 
     Returns:
         Matrices `(n, 3, 3)`.

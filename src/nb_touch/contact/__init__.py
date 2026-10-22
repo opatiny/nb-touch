@@ -5,6 +5,7 @@ from nb_touch.contact.cop_model import (
     cop_normal,
     cop_position,
     cop_to_taxel_forces,
+    spacing_sigma,
     taxel_force_matrices,
     taxel_to_cop_force,
 )
@@ -20,6 +21,7 @@ __all__ = [
     "cop_to_taxel_forces",
     "find_contacts",
     "make_filter",
+    "spacing_sigma",
     "taxel_force_matrices",
     "taxel_to_cop_force",
 ]

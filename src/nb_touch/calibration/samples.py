@@ -75,6 +75,7 @@ def sample_cop(positions, normals, forces, settings: ContactSettings):
         `(taxels, cop, operators)`, or `None` if fewer than `min_taxels` taxels are
         active or the normal at the CoP is undefined.
     """
+    settings = settings.from_geometry(positions)
     taxels = np.flatnonzero(active_taxels(forces, settings.threshold))
     if len(taxels) < max(settings.min_taxels, 1):
         return None
@@ -110,6 +111,7 @@ def calibration_samples(
     """
     positions = np.asarray(positions, dtype=float)
     normals = np.asarray(normals, dtype=float)
+    settings = settings.from_geometry(positions)
     entries, jacobians, torques = [], [], []
     for forces, q, tau in zip(
         recording.taxel_forces_n,

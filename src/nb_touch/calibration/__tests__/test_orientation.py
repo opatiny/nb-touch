@@ -60,8 +60,9 @@ def test_predict_torques_matches_numpy_cop_force():
         sensor.positions, normals, recording.taxel_forces_n[0], SETTINGS.contact
     )
     normal = cop_normal(sensor.positions[taxels], normals[taxels], cop)
+    sigma = SETTINGS.contact.from_geometry(sensor.positions).sigma
     matrices = taxel_force_matrices(
-        sensor.positions[taxels], normals[taxels], cop, normal
+        sensor.positions[taxels], normals[taxels], cop, normal, sigma
     )
     forces = rotate_vectors(rotations[taxels], recording.taxel_forces_n[0][taxels])
     expected = -finger_jacobian(None, None, cop).T @ taxel_to_cop_force(

@@ -5,16 +5,17 @@ Stats and normal/shear split adapted from `dextHand`,
 `src/dexthand/touch/contact_zone.py`.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 
 from nb_touch.contact.active import THRESHOLD, active_taxels, taxel_norms
 from nb_touch.contact.cop_model import (
     REGULARISATION,
-    SIGMA_M,
+    SIGMA_SPACING_FACTOR,
     cop_normal,
     cop_position,
+    spacing_sigma,
     taxel_force_matrices,
     taxel_to_cop_force,
 )
@@ -28,14 +29,32 @@ class ContactSettings:
     Attributes:
         threshold: Taxel force norm above which a taxel is in contact, in N.
         min_taxels: Fewest taxels a contact needs.
-        sigma: Spread of the CoP model's Gaussian weights, in m.
+        sigma: Spread of the CoP model's Gaussian weights, in m. None returns
+            `sigma_factor` times the median taxel spacing of the sensor, see
+            `from_geometry`.
+        sigma_factor: σ over the median taxel spacing when `sigma` is None.
         regularisation: Ridge regularisation λ of the CoP force solve.
     """
 
     threshold: float = THRESHOLD
     min_taxels: int = MIN_TAXELS
-    sigma: float = SIGMA_M
+    sigma: float | None = None
+    sigma_factor: float = SIGMA_SPACING_FACTOR
     regularisation: float = REGULARISATION
+
+    def from_geometry(self, positions) -> "ContactSettings":
+        """Return these settings with `sigma` set for a sensor.
+
+        If sigma is None, a default value is used: `sigma_factor` times the median
+        taxel spacing of the sensor, or `SIGMA_M` for a sensor of a single taxel
+        (`spacing_sigma`). A set `sigma` is kept.
+
+        Args:
+            positions: Taxel positions `(n, 3)` of the whole sensor, in m.
+        """
+        if self.sigma is not None:
+            return self
+        return replace(self, sigma=spacing_sigma(positions, self.sigma_factor))
 
 
 @dataclass(frozen=True)
@@ -108,6 +127,7 @@ def contact_from_taxels(
         forces: Taxel forces `(n, 3)` of the whole sensor, in the sensor frame, in N.
         settings: `sigma` and `regularisation` are used.
     """
+    settings = settings.from_geometry(positions)
     taxels = np.asarray(taxels, dtype=int)
     points = np.asarray(positions, dtype=float)[taxels]
     zone_normals = np.asarray(normals, dtype=float)[taxels]
@@ -153,6 +173,7 @@ def contacts_from_active(
     Returns:
         The contacts, largest CoP force first. Empty when nothing touches.
     """
+    settings = settings.from_geometry(positions)
     zones = contact_zones(active, neighbours, settings.min_taxels)
     zones = [zone for zone in zones if taxel_norms(np.asarray(forces)[zone]).any()]
     contacts = [

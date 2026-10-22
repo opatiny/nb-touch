@@ -2,7 +2,11 @@ import numpy as np
 import pytest
 
 from nb_touch.contact.contacts import ContactSettings, find_contacts
-from nb_touch.contact.cop_model import cop_to_taxel_forces, taxel_force_matrices
+from nb_touch.contact.cop_model import (
+    cop_to_taxel_forces,
+    spacing_sigma,
+    taxel_force_matrices,
+)
 from nb_touch.contact.detector import ContactDetector
 from nb_touch.contact.filters import Debounce
 from nb_touch.geometry.frames import normals_from_rotations
@@ -13,12 +17,15 @@ from nb_touch.io.sensor_geometry import SensorGeometry
 
 SPHERE = sphere_sensor(radius=0.01, count=80)
 NORMALS = normals_from_rotations(SPHERE.rotations)
+SIGMA = spacing_sigma(SPHERE.positions)
 
 
 def sphere_push(taxel, cop_force):
     """Return sensor-frame taxel forces for a CoP force at a taxel of the sphere."""
     cop = SPHERE.positions[taxel]
-    matrices = taxel_force_matrices(SPHERE.positions, NORMALS, cop, NORMALS[taxel])
+    matrices = taxel_force_matrices(
+        SPHERE.positions, NORMALS, cop, NORMALS[taxel], SIGMA
+    )
     return cop_to_taxel_forces(cop_force, matrices)
 
 
@@ -58,3 +65,8 @@ def test_force_frame_must_be_given():
         detector.update(np.zeros((SPHERE.num_taxels, 3)))
     with pytest.raises(TypeError):
         detector.update(np.zeros((SPHERE.num_taxels, 3)), True)
+
+
+def test_detector_sets_sigma_from_taxel_spacing():
+    sensor = plane_sensor(rows=4, cols=4, spacing=0.004)
+    assert ContactDetector(sensor).settings.sigma == pytest.approx(1.5 * 0.004)

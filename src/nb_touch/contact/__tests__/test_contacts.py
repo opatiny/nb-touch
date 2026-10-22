@@ -7,7 +7,13 @@ from nb_touch.contact.contacts import (
     find_contacts,
     split_force,
 )
-from nb_touch.contact.cop_model import cop_to_taxel_forces, taxel_force_matrices
+from nb_touch.contact.cop_model import (
+    SIGMA_M,
+    SIGMA_SPACING_FACTOR,
+    cop_to_taxel_forces,
+    spacing_sigma,
+    taxel_force_matrices,
+)
 from nb_touch.geometry.frames import normals_from_rotations
 from nb_touch.geometry.neighbours import taxel_neighbours
 from nb_touch.geometry.synthetic import plane_sensor, sphere_sensor
@@ -19,7 +25,7 @@ UP = np.array([0.0, 0.0, 1.0])
 CENTRE = 40  # middle of the 9 x 9 grid
 
 
-def push(taxel, cop_force, sigma=0.003):
+def push(taxel, cop_force, sigma=SIGMA_SPACING_FACTOR * 0.003):
     """Return the plane's taxel forces for a CoP force at a taxel."""
     matrices = taxel_force_matrices(
         PLANE.positions, NORMALS, PLANE.positions[taxel], UP, sigma
@@ -79,7 +85,7 @@ def test_sheared_push_slip_ratio_within_10_percent():
 
 def test_two_pushes_give_two_contacts_strongest_first():
     # Taxels 20 and 60: rows and columns 2 and 6 of the 9 x 9 grid.
-    forces = push(20, [0, 0, -1.0]) + push(60, [0, 0, -3.0])
+    forces = push(20, [0, 0, -1.0], 0.003) + push(60, [0, 0, -3.0], 0.003)
     contacts = find_contacts(PLANE.positions, NORMALS, forces, NEIGHBOURS)
     assert len(contacts) == 2
     np.testing.assert_allclose(contacts[0].cop, PLANE.positions[60], atol=1e-4)
@@ -127,8 +133,57 @@ def test_contact_on_sphere_has_outward_normal():
     taxels = np.arange(sensor.num_taxels)
     top = int(np.argmax(sensor.positions[:, 2]))
     cop = sensor.positions[top]
-    matrices = taxel_force_matrices(sensor.positions, normals, cop, normals[top])
+    sigma = spacing_sigma(sensor.positions)
+    matrices = taxel_force_matrices(sensor.positions, normals, cop, normals[top], sigma)
     forces = cop_to_taxel_forces(-0.5 * normals[top], matrices)
     contact = contact_from_taxels(taxels, sensor.positions, normals, forces)
     assert contact.normal[2] > 0.99
     assert contact.normal_force > 0
+
+
+def test_default_sigma_is_factor_times_median_taxel_spacing():
+    sensor = plane_sensor(rows=3, cols=4, spacing=0.004)
+    settings = ContactSettings().from_geometry(sensor.positions)
+    assert settings.sigma == pytest.approx(SIGMA_SPACING_FACTOR * 0.004)
+
+
+def test_sigma_factor_scales_the_spacing():
+    sensor = plane_sensor(rows=3, cols=4, spacing=0.004)
+    settings = ContactSettings(sigma_factor=2.0).from_geometry(sensor.positions)
+    assert settings.sigma == pytest.approx(0.008)
+
+
+def test_sigma_factor_ignored_when_sigma_set():
+    settings = ContactSettings(sigma=0.01, sigma_factor=2.0)
+    assert settings.from_geometry(PLANE.positions).sigma == 0.01
+
+
+def test_set_sigma_is_kept():
+    settings = ContactSettings(sigma=0.01)
+    assert settings.from_geometry(PLANE.positions) is settings
+
+
+def test_single_taxel_sensor_falls_back_to_default_sigma():
+    assert ContactSettings().from_geometry(np.zeros((1, 3))).sigma == SIGMA_M
+
+
+def test_find_contacts_uses_taxel_spacing_as_sigma():
+    sensor = plane_sensor(rows=9, cols=9, spacing=0.005)
+    normals = normals_from_rotations(sensor.rotations)
+    cop_force = np.array([0.0, 0.0, -2.0])
+    matrices = taxel_force_matrices(
+        sensor.positions,
+        normals,
+        sensor.positions[CENTRE],
+        UP,
+        SIGMA_SPACING_FACTOR * 0.005,
+    )
+    forces = cop_to_taxel_forces(cop_force, matrices)
+    (contact,) = find_contacts(
+        sensor.positions,
+        normals,
+        forces,
+        taxel_neighbours(sensor.positions),
+        ContactSettings(threshold=0.0, regularisation=0.0),
+    )
+    assert contact.cop_force == pytest.approx(cop_force, abs=1e-6)
