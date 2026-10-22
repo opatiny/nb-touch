@@ -35,13 +35,13 @@ Source: `src/nb_touch/geometry/frames.py`; see also [Finding normal at taxel](..
 
 `ContactSettings` (symbols as in the paper, Section 3.2):
 
-| Field            | What it does                                                            | Default |
-| ---------------- | ----------------------------------------------------------------------- | ------- |
-| `threshold`      | Taxel force norm above which a taxel is active, in N.                   | `0.2`   |
-| `min_taxels`     | Minimum number of active taxels in a contact.                           | `3`     |
-| `sigma`          | Spread σ of the Gaussian weights, in m; `None` for `sigma_factor` times the median taxel spacing of the sensor. | `None` |
-| `sigma_factor`   | σ over the median taxel spacing, used when `sigma` is `None`. A sensor of a single taxel gets σ = 3 mm. | `1.5` |
-| `regularisation` | Ridge λ of the CoP force solve; 0 gives the minimum-norm least squares. | `0.001` |
+| Field            | What it does                                                                                                    | Default |
+| ---------------- | --------------------------------------------------------------------------------------------------------------- | ------- |
+| `threshold`      | Taxel force norm above which a taxel is active, in N.                                                           | `0.2`   |
+| `min_taxels`     | Minimum number of active taxels in a contact.                                                                   | `3`     |
+| `sigma`          | Spread σ of the Gaussian weights, in m; `None` for `sigma_factor` times the median taxel spacing of the sensor. | `None`  |
+| `sigma_factor`   | σ over the median taxel spacing, used when `sigma` is `None`. A sensor of a single taxel gets σ = 3 mm.         | `1.5`   |
+| `regularisation` | Ridge λ of the CoP force solve; 0 gives the minimum-norm least squares.                                         | `0.001` |
 
 ## The lambda and sigma parameters
 
