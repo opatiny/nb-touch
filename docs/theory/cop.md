@@ -2,32 +2,16 @@
 
 From a set of taxels with their xyz forces to N contacts on a sensor, each with its centre of pressure (CoP), CoP force and stats.
 
-<!--- todo: remove cop model, it's in the paper -->
-
 ## Pipeline
 
 1. **Active taxels**: taxels whose force norm is above a threshold, optionally filtered over time (hysteresis or debounce) so contacts do not flicker.
 2. **Zones**: active taxels grouped into connected groups of neighbours. Each zone is one contact.
 3. **Per zone**:
    - CoP position: taxel positions averaged with the force norms as weights, expressed in sensor frame.
-   - CoP force: the paper's solve (below), restricted to the zone's taxels. x,y,z components expressed in sensor frame.
+   - CoP force: the paper's ridge least-squares solve ([arXiv 2605.28812](https://arxiv.org/abs/2605.28812), Section 3.2), restricted to the zone's taxels. x,y,z components expressed in sensor frame.
    - Stats: total force, normal force, shear force, slip ratio (shear / normal), max and mean taxel force, taxel count, contact normal.
 
 > Limitation: two contacts on adjacent taxels merge into one zone. Splitting them needs a local-maxima step.
-
-## CoP model (Pan et al. 2026)
-
-Per sensor, the contact is a 3D force and a 3D position **in the sensor frame**. Only the normal component is used, as simulated shear is unreliable.
-
-- Active taxels: $\mathcal{A} = \{i : \|f_i\| > \epsilon\}$.
-- Forward model, CoP force to taxel forces: $f_i = M_i f_{cop}$, with $M_i = w_i (\hat{b}_i \hat{n}_{cop}^T + P_{shear})$.
-  - Weights: $w_i = \exp(-\|p_i - p_{cop}\|^2 / (2\sigma^2))$.
-  - Normal force direction at each taxel: $\hat{b}_i = \text{normalise}(w_i \hat{n}_i + (1 - w_i) \hat{v}_i)$, with $\hat{n}_i$ the taxel normal and $\hat{v}_i$ the unit vector from the CoP to taxel $i$.
-  - Shear projector: $P_{shear} = I - \hat{n}_{cop} \hat{n}_{cop}^T$.
-- CoP normal: taxel normals averaged with weights $1 / \|p_i - p_{cop}\|$ (inverse distance weighting, Shepard 1968).
-- Inverse, taxel forces to CoP force (ridge least squares): $f_{cop} = (A^T A + \lambda^2 I)^{-1} A^T b$, with $A$ stacking the $M_i$ and $b$ stacking the $f_i$.
-
-Source: [arXiv 2605.28812](https://arxiv.org/abs/2605.28812), from an automatic summary of the HTML version: check against the paper before implementing.
 
 ## Usage
 
@@ -45,9 +29,9 @@ Each missing rotation is the smallest one taking the sensor's z axis to the taxe
 - x and y: the sensor's x and y, tilted as little as possible to stay perpendicular to that normal. On a flat sensor, they are the sensor's x and y.
 - The positions of the taxels only allow to estimate the normal (z axis), not the rotation about it: the real x and y of a taxel should come from the [orientation calibration](taxel-orientation.md) or a known taxel layout.
 
-Source: `src/nb_touch/geometry/frames.py`; see also [Normals and taxel frames](../usage/geometry.md#normals-and-taxel-frames).
+Source: `src/nb_touch/geometry/frames.py`; see also [Estimating taxel orientations](../usage/geometry.md#estimating-taxel-orientations).
 
-`ContactSettings`:
+`ContactSettings` (symbols as in the paper, Section 3.2):
 
 | Field            | What it does                                                            | Default |
 | ---------------- | ----------------------------------------------------------------------- | ------- |
