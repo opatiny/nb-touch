@@ -1,5 +1,7 @@
 # Projection to SO(3)
 
+<!-- todo: merge with  taxel orientation? -->
+
 `project_to_so3` takes any 3×3 matrix and returns the closest rotation matrix: orthonormal, with determinant +1.
 
 ## How

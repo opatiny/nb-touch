@@ -1,6 +1,8 @@
 # Taxel orientation calibration
 
-Estimating the rotation $R_i$ of each taxel in the sensor frame from recorded taxel forces, joint angles and joint torques, without a force sensor.
+<!-- todo: declutter this file -->
+
+Estimating the rotation $R_i$ of each taxel relative to the sensor frame. The calibration is solely based on a recording of taxel forces, joint angles and joint torques when an object is moved on the sensing surface.
 
 ## Method in the paper
 
