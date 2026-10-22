@@ -1,4 +1,4 @@
-# Visualisation
+# Visualisation in MuJoCo
 
 Drawing a sensor's taxels, taxel forces and contacts in MuJoCo, in `src/nb_touch/viz/`.
 
@@ -13,7 +13,7 @@ They draw into a `MjvScene`, such as a passive viewer's `user_scn`, and change n
 
 ## Example: CoP in MuJoCo
 
-`examples/cop_in_mujoco.py` shows the [taxel-CoP mapping](../theory/cop.md) on a synthetic sensor (see ...).
+`examples/cop_in_mujoco.py` shows the [taxel-CoP mapping](theory/cop.md) on a synthetic sensor (see ...).
 
 - A true CoP force (green) moves around the sensor, its shear turning.
 - The model's forward direction turns it into taxel forces (blue), plus noise.
