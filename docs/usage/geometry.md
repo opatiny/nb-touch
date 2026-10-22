@@ -12,7 +12,7 @@ For each taxel: list the taxels that are closer than a given distance. This dist
 
 Example: `taxel_neighbours(positions, factor=1.5)`
 
-> todo: improve example
+<!--- todo: improve example -->
 
 ## Rotation matrices and frame changes
 
@@ -30,4 +30,4 @@ Mock sensors are implemented, used for tests and in the examples. Use the functi
 
 The number of taxels as well as the spacing can be chosen. Example:
 
-> todo
+<!--- todo -->

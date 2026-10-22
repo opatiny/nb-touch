@@ -2,7 +2,7 @@
 
 From a set of taxels with their xyz forces to N contacts on a sensor, each with its centre of pressure (CoP), CoP force and stats.
 
-> todo: remove cop model, it's in the paper
+<!--- todo: remove cop model, it's in the paper -->
 
 ## Pipeline
 

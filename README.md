@@ -17,13 +17,13 @@ The resultant force is computed from the taxel forces using the CoP model presen
 
 From taxels to CoP:
 
-> todo: code example
+<!--- todo: code example -->
 
 From CoP to taxels:
 
-> todo: code example
+<!--- todo: code example -->
 
-For more details, see #todo: add link to md
+For more details, see <!--- todo: add link to md -->
 
 ## CoP examples
 
@@ -37,7 +37,7 @@ It shows:
 - **green arrow and dot**: true CoP force and position
 - **red arrow and dot**: estimated CoP force and position, recomputed from the taxel forces
 
-Why the green and red arrows don't match perfectly? See #todo: add link to md
+Why the green and red arrows don't match perfectly? See <!--- todo: add link to md -->
 
 ### Planar sensor
 
@@ -58,18 +58,18 @@ Implemented in `src/nb_touch/io/recordings.py`, imported from `nb_touch.io`.
 
 Save recording:
 
-> todo: code example replacing above lines
+<!--- todo: code example replacing above lines -->
 
 Load recording:
 
-> todo: code example
+<!--- todo: code example -->
 
 ### Use recording to compute the taxel orientations
 
-> todo: example
+<!--- todo: example -->
 
 ## Recording calibration data on a real hand
 
 This library was tested on a real robotic hand: the Orca hand touch. The code and results are accessible here:
 
-> todo: add link once code is public
+<!--- todo: add link once code is public -->
