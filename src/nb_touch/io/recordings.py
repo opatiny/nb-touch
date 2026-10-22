@@ -1,6 +1,6 @@
 """Reading and writing recordings: arrays in `.npz`, metadata in a YAML sidecar.
 
-See `docs/formats/recordings.md`.
+See `docs/theory/taxel-orientation.md`.
 """
 
 from dataclasses import dataclass, field
