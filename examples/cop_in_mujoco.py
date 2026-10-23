@@ -5,12 +5,16 @@
 # The contact detection then estimates the CoP and CoP force back from the taxel
 # forces alone (red). Taxels in a contact are yellow.
 #
+# The sliders in the viewer's Control panel (right) change σ, in mm, and λ while it
+# runs. σ is used both to make the taxel forces and to estimate the CoP force back.
+#
 # Needs the viz extra (uv sync --extra viz). Edit the constants, then run, on macOS:
 #   uv run mjpython examples/cop_in_mujoco.py
 # and on Linux or Windows:
 #   uv run python examples/cop_in_mujoco.py
 
 import time
+from dataclasses import replace
 
 import mujoco
 import mujoco.viewer
@@ -28,6 +32,7 @@ from nb_touch.viz.sensor import (
     draw_taxel_forces,
     draw_taxels,
 )
+from nb_touch.viz.sliders import compile_with_sliders, slider_values
 
 # simulation options
 SHAPE = "plane"
@@ -57,7 +62,13 @@ MOVING = False
 # contact settings
 SETTINGS = ContactSettings(min_taxels=1, sigma=0.003, regularisation=0.1)
 """Contact detection settings, see `ContactSettings` in
-`src/nb_touch/contact/contacts.py`. σ is used to make the taxel forces."""
+`src/nb_touch/contact/contacts.py`. σ and λ are the sliders' start values."""
+
+SIGMA_RANGE_MM = (0.5, 20.0)
+"""Range of the σ slider, in mm."""
+
+LAMBDA_RANGE = (0.0, 3.0)
+"""Range of the λ (regularisation) slider."""
 
 # display options
 COP_SCALE_M_PER_N = 0.02
@@ -84,16 +95,19 @@ MODEL = """
 """
 
 
-def true_cop(positions, normals, time_s: float) -> tuple[np.ndarray, np.ndarray]:
+def true_cop(
+    positions, normals, time_s: float, sigma: float
+) -> tuple[np.ndarray, np.ndarray]:
     """Return the true CoP and its normal at `time_s`.
 
     The CoP follows a circle seen from above, lifted onto the sensor as the taxel
-    positions averaged with Gaussian weights on their distance from above.
+    positions averaged with Gaussian weights of spread `sigma` on their distance
+    from above.
     """
     angle = 2 * np.pi * time_s / PERIOD_S
     target = PATH_RADIUS_M * np.array([np.cos(angle), np.sin(angle)])
     offsets = positions[:, :2] - target
-    weights = np.exp(-np.sum(offsets**2, axis=1) / (2 * SETTINGS.sigma**2))
+    weights = np.exp(-np.sum(offsets**2, axis=1) / (2 * sigma**2))
     cop = weights @ positions / weights.sum()
     return cop, cop_normal(positions, normals, cop)
 
@@ -111,9 +125,12 @@ def true_cop_force(normal, time_s: float) -> np.ndarray:
     return -NORMAL_FORCE_N * normal + SHEAR_FORCE_N * shear
 
 
-def taxel_forces(positions, normals, cop, normal, cop_force, rng) -> np.ndarray:
-    """Return the taxel forces of the model's forward direction, plus noise."""
-    matrices = taxel_force_matrices(positions, normals, cop, normal, SETTINGS.sigma)
+def taxel_forces(
+    positions, normals, cop, normal, cop_force, sigma: float, rng
+) -> np.ndarray:
+    """Return the taxel forces of the model's forward direction with spread
+    `sigma`, plus noise."""
+    matrices = taxel_force_matrices(positions, normals, cop, normal, sigma)
     forces = cop_to_taxel_forces(cop_force, matrices)
     return forces + rng.normal(scale=NOISE_N, size=forces.shape)
 
@@ -154,8 +171,14 @@ def main() -> None:
     normals = normals_from_orientations(sensor.orientations)
     detector = ContactDetector(sensor, SETTINGS)
     rng = np.random.default_rng(0)
-    model = mujoco.MjModel.from_xml_string(MODEL)
-    data = mujoco.MjData(model)
+    model, data = compile_with_sliders(
+        MODEL,
+        {"sigma_mm": SIGMA_RANGE_MM, "lambda": LAMBDA_RANGE},
+        {
+            "sigma_mm": 1000 * detector.settings.sigma,
+            "lambda": detector.settings.regularisation,
+        },
+    )
     with mujoco.viewer.launch_passive(model, data) as viewer:
         with viewer.lock():
             viewer.cam.lookat[:] = positions.mean(axis=0)
@@ -166,9 +189,16 @@ def main() -> None:
         while viewer.is_running():
             now = time.monotonic() - start
             time_s = now if MOVING else 0.0
-            cop, normal = true_cop(positions, normals, time_s)
+            sliders = slider_values(model, data)
+            sigma = sliders["sigma_mm"] / 1000
+            detector.settings = replace(
+                detector.settings, sigma=sigma, regularisation=sliders["lambda"]
+            )
+            cop, normal = true_cop(positions, normals, time_s, sigma)
             cop_force = true_cop_force(normal, time_s)
-            forces = taxel_forces(positions, normals, cop, normal, cop_force, rng)
+            forces = taxel_forces(
+                positions, normals, cop, normal, cop_force, sigma, rng
+            )
             contacts = detector.update(forces, in_taxel_frames=False)
             with viewer.lock():
                 draw_frame(viewer.user_scn, positions, forces, contacts, cop, cop_force)
