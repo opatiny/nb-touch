@@ -113,9 +113,48 @@ Why the green and red arrows don't match perfectly? See [Known bias](docs/theory
 
 ## Taxel orientation detection
 
+### Generate a recording file
+
+A recording holds, for each sample, the taxel forces (each in its taxel's frame), the joint angles and the joint torques of the finger carrying the sensor, while an object is pressed at random places on the sensor. The paper uses 2400 samples: 2 min at 20 Hz ([arXiv 2605.28812](https://arxiv.org/html/2605.28812v1), Appendix A).
+
+File format: [Recording format](docs/theory/taxel-orientation.md#recording-format).
+
+Synthetic recording of 2400 samples on the 3×3 grid above, mounted on a 4-joint finger, with true taxel orientations (the orientations on the real hardware) up to 20° away from the geometry's:
+
+```python
+from nb_touch.calibration.synthetic import perturbed_orientations, synthetic_recording
+from nb_touch.io import save_recording
+
+rng = np.random.default_rng(0)
+true_orientations = perturbed_orientations(sensor.orientations, np.radians(20), rng)
+recording = synthetic_recording(sensor, true_orientations, num_samples=2400, rng=rng)
+save_recording(recording, "results/recording")  # recording.npz and recording.yaml
+```
+
+How the joint torques and taxel forces are simulated: [docs/synthetic-recording.md](docs/synthetic-recording.md).
+
+With real hardware, build a `Recording` from the measured arrays instead (see [Reading and writing a recording](docs/theory/taxel-orientation.md#reading-and-writing-a-recording)).
+
 ### Use recording to compute the taxel orientations
 
-<!--- todo: example -->
+The calibration needs the recording, the sensor geometry (orientations are optional, they are only the starting point) and a function `jacobian(q, link, point)` returning the `(3, J)` position Jacobian of a point of the sensor, in the sensor frame. Here, the Jacobian of the synthetic finger:
+
+```python
+from nb_touch.calibration import calibrate_orientations
+from nb_touch.calibration.synthetic import finger_jacobian
+from nb_touch.geometry.transforms import angles_between_rotations
+from nb_touch.io import load_recording
+
+recording = load_recording("results/recording")
+result = calibrate_orientations(recording, sensor, finger_jacobian)
+before = angles_between_rotations(sensor.orientations, true_orientations)
+after = angles_between_rotations(result.geometry.orientations, true_orientations)
+print(np.degrees(before).max().round(1), np.degrees(after).max().round(1))  # 19.6 6.4
+```
+
+`result.geometry` is the sensor geometry with the calibrated orientations, `result.losses` the torque MSE at each step. The paper's 100 Adam steps are the default; with `settings=CalibrationSettings(steps=1000)`, the largest is expected to drop to 1.0°.
+
+For more details, see [docs/theory/taxel-orientation.md](docs/theory/taxel-orientation.md).
 
 ## Recording calibration data on a real hand
 
