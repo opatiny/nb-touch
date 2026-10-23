@@ -81,8 +81,11 @@ FORCE_VIEW = ForceView.SENSOR_REACTION_FORCE
 """Arrows for the forces acting on the sensor, or for their opposite
 (`ForceView.SENSOR_REACTION_FORCE`)."""
 
-TRUE_RGBA = (0.2, 0.8, 0.2, 1.0)
-"""Green: the true CoP and CoP force."""
+TRUE_RGBA = (0.2, 0.8, 0.2, 0.5)
+"""Translucent green: the true CoP and CoP force."""
+
+ESTIMATED_RGBA = (1.0, 0.2, 0.2, 0.5)
+"""Translucent red: the estimated CoPs and CoP forces."""
 
 RATE_HZ = 30.0
 """Viewer refresh rate, in Hz."""
@@ -146,7 +149,7 @@ def draw_frame(scene, positions, forces, contacts, cop, cop_force) -> None:
         scene, positions, forces, TAXEL_SCALE_M_PER_N, NOISE_N * 3, FORCE_VIEW
     )
     draw_cop(scene, cop, cop_force, COP_SCALE_M_PER_N, TRUE_RGBA, FORCE_VIEW)
-    draw_contacts(scene, contacts, COP_SCALE_M_PER_N, FORCE_VIEW)
+    draw_contacts(scene, contacts, COP_SCALE_M_PER_N, ESTIMATED_RGBA, FORCE_VIEW)
     # Sensor origin, for reference.
     draw_spheres(scene, [np.zeros(3)], 0.0003, (1.0, 1.0, 1.0, 1.0))
 

@@ -97,3 +97,20 @@ def test_contacts_drawn(make_scene):
     scene = make_scene(10)
     assert draw_contacts(scene, contacts, 0.01) == 3
     assert draw_contacts(scene, [], 0.01) == 0
+
+
+def test_contacts_drawn_in_the_given_color(make_scene):
+    forces = np.zeros((9, 3))
+    forces[0] = [0.0, 0.0, 1.0]
+    normals = normals_from_orientations(PLANE.orientations)
+    contacts = find_contacts(
+        PLANE.positions,
+        normals,
+        forces,
+        taxel_neighbours(PLANE.positions),
+        ContactSettings(min_taxels=1),
+    )
+    scene = make_scene(10)
+    rgba = (1.0, 0.2, 0.2, 0.5)
+    draw_contacts(scene, contacts, 0.01, rgba)
+    assert all(scene.geoms[i].rgba == pytest.approx(rgba) for i in range(scene.ngeom))

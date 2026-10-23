@@ -135,14 +135,18 @@ def draw_contacts(
     scene,
     contacts: list[Contact],
     scale: float,
+    rgba=COP_RGBA,
     view: ForceView = ForceView.FORCE_ON_SENSOR,
 ) -> int:
     """Draw every contact's CoP and CoP force, see `draw_cop`.
+
+    Args:
+        rgba: Color, red by default.
 
     Returns:
         The number of geoms drawn.
     """
     return sum(
-        draw_cop(scene, contact.cop, contact.cop_force, scale, view=view)
+        draw_cop(scene, contact.cop, contact.cop_force, scale, rgba, view)
         for contact in contacts
     )
