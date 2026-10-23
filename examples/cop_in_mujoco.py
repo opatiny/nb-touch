@@ -5,8 +5,9 @@
 # The contact detection then estimates the CoP and CoP force back from the taxel
 # forces alone (red). Taxels in a contact are yellow.
 #
-# The sliders in the viewer's Control panel (right) change σ, in mm, and λ while it
-# runs. σ is used both to make the taxel forces and to estimate the CoP force back.
+# The sliders in the viewer's Control panel (right) change σ, in mm, λ and the normal
+# and shear parts of the true CoP force, in N, while it runs. σ is used both to make
+# the taxel forces and to estimate the CoP force back.
 #
 # Needs the viz extra (uv sync --extra viz). Edit the constants, then run, on macOS:
 #   uv run mjpython examples/cop_in_mujoco.py
@@ -34,18 +35,12 @@ from nb_touch.viz.sensor import (
 )
 from nb_touch.viz.sliders import compile_with_sliders, slider_values
 
-# simulation options
-SHAPE = "plane"
+# SIMULATION OPTIONS
+SHAPE = "sphere"
 """Synthetic sensor: "plane", "cylinder" or "sphere"."""
 
-NUM_TAXELS = 25
+NUM_TAXELS = 40
 """Number of taxels."""
-
-NORMAL_FORCE_N = 1
-"""Push of the true CoP force, against the outward normal, in N."""
-
-SHEAR_FORCE_N = 0
-"""Shear part of the true CoP force, in N. Its direction turns over time."""
 
 NOISE_N = 0.0
 """Standard deviation of the noise added to each taxel force component, in N."""
@@ -64,13 +59,28 @@ SETTINGS = ContactSettings(min_taxels=1, sigma=0.003, regularisation=0.1)
 """Contact detection settings, see `ContactSettings` in
 `src/nb_touch/contact/contacts.py`. σ and λ are the sliders' start values."""
 
+# SLIDERS
+NORMAL_FORCE_N = 1
+"""Push of the true CoP force, against the outward normal, in N. The slider's start
+value."""
+
+SHEAR_FORCE_N = 0
+"""Shear part of the true CoP force, in N. Its direction turns over time. The
+slider's start value."""
+
+NORMAL_FORCE_RANGE_N = (0, 1.0)
+"""Range of the normal force slider, in N."""
+
+SHEAR_FORCE_RANGE_N = (-0.5, 0.5)
+"""Range of the shear force slider, in N."""
+
 SIGMA_RANGE_MM = (0.5, 20.0)
 """Range of the σ slider, in mm."""
 
 LAMBDA_RANGE = (0.0, 3.0)
 """Range of the λ (regularisation) slider."""
 
-# display options
+# VIEWER OPTIONS
 COP_SCALE_M_PER_N = 0.02
 """CoP force arrow length per newton, in m."""
 
@@ -115,9 +125,11 @@ def true_cop(
     return cop, cop_normal(positions, normals, cop)
 
 
-def true_cop_force(normal, time_s: float) -> np.ndarray:
-    """Return the true CoP force: a push against the outward `normal` plus a
-    turning shear."""
+def true_cop_force(
+    normal, time_s: float, normal_force: float, shear_force: float
+) -> np.ndarray:
+    """Return the true CoP force: a push of `normal_force` against the outward
+    `normal` plus a turning shear of `shear_force`, in N."""
     across = np.cross(normal, [1.0, 0.0, 0.0])
     if np.linalg.norm(across) < 1e-6:
         across = np.cross(normal, [0.0, 1.0, 0.0])
@@ -125,7 +137,7 @@ def true_cop_force(normal, time_s: float) -> np.ndarray:
     other = np.cross(normal, across)
     angle = 2 * np.pi * time_s / (PERIOD_S / 3)
     shear = np.cos(angle) * across + np.sin(angle) * other
-    return -NORMAL_FORCE_N * normal + SHEAR_FORCE_N * shear
+    return -normal_force * normal + shear_force * shear
 
 
 def taxel_forces(
@@ -176,10 +188,17 @@ def main() -> None:
     rng = np.random.default_rng(0)
     model, data = compile_with_sliders(
         MODEL,
-        {"sigma_mm": SIGMA_RANGE_MM, "lambda": LAMBDA_RANGE},
+        {
+            "sigma_mm": SIGMA_RANGE_MM,
+            "lambda": LAMBDA_RANGE,
+            "normal_N": NORMAL_FORCE_RANGE_N,
+            "shear_N": SHEAR_FORCE_RANGE_N,
+        },
         {
             "sigma_mm": 1000 * detector.settings.sigma,
             "lambda": detector.settings.regularisation,
+            "normal_N": NORMAL_FORCE_N,
+            "shear_N": SHEAR_FORCE_N,
         },
     )
     with mujoco.viewer.launch_passive(model, data) as viewer:
@@ -198,7 +217,9 @@ def main() -> None:
                 detector.settings, sigma=sigma, regularisation=sliders["lambda"]
             )
             cop, normal = true_cop(positions, normals, time_s, sigma)
-            cop_force = true_cop_force(normal, time_s)
+            cop_force = true_cop_force(
+                normal, time_s, sliders["normal_N"], sliders["shear_N"]
+            )
             forces = taxel_forces(
                 positions, normals, cop, normal, cop_force, sigma, rng
             )
