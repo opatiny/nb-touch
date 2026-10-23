@@ -11,6 +11,12 @@ Main features:
 - Conversion from taxel forces to CoP force.
 - Tools for automatic taxel orientation detection: this requires torque sensors for all the links active when touching the sensor.
 
+## Installation
+
+- `pip install nb-touch`: CoP model, contact detection, geometry and I/O.
+- `pip install "nb-touch[calibration]"`: adds the taxel orientation calibration (needs `torch`).
+- `pip install "nb-touch[viz]"`: adds the MuJoCo drawing helpers used by the example (needs `mujoco`).
+
 ## Conventions
 
 - Normals at the taxels point outward, out of the sensing surface. The sensor frame and every taxel frame are right-handed, with z along the outward normal.
@@ -23,7 +29,7 @@ Be careful:
 
 Source: [arXiv 2605.28812](https://arxiv.org/html/2605.28812v1), Sections 3.2 (inward normals, $f_{cop}$ acting on the robot link) and 3.3 ($\tau = -J^T f$).
 
-## From taxels to resultant force (and conversly)
+## From taxels to resultant force (and conversely)
 
 The resultant force is computed from the taxel forces using the CoP model presented in the paper.
 
@@ -89,11 +95,11 @@ Expected print, one row per taxel:
 
 The centre taxel gets the whole push. The others get less the further they are, tilted away from the CoP.
 
-For more details, see [docs/theory/cop.md](docs/theory/cop.md).
+For more details, see [docs/theory/cop.md](https://github.com/opatiny/nb-touch/blob/main/docs/theory/cop.md).
 
 ## CoP examples
 
-An example script for the taxel to CoP conversion can be found in `examples/cop_in_mujoco.py`. It provides the taxel-CoP mapping on a synthetic sensor, shown in MuJoCo. Run it in an activated terminal with `python examples/cop_in_mujoco.py`.
+An example script for the taxel to CoP conversion can be found in [`examples/cop_in_mujoco.py`](https://github.com/opatiny/nb-touch/blob/main/examples/cop_in_mujoco.py). It provides the taxel-CoP mapping on a synthetic sensor, shown in MuJoCo. It needs the viz extra. Run it in an activated terminal with `python examples/cop_in_mujoco.py` (on macOS: `mjpython examples/cop_in_mujoco.py`).
 
 It shows:
 
@@ -103,7 +109,7 @@ It shows:
 - **green arrow and dot**: true CoP force and position
 - **red arrow and dot**: estimated CoP force and position, recomputed from the taxel forces
 
-Why the green and red arrows don't match perfectly? See [Known bias](docs/theory/cop.md#known-bias).
+Why the green and red arrows don't match perfectly? See [Known bias](https://github.com/opatiny/nb-touch/blob/main/docs/theory/cop.md#known-bias).
 
 ### Planar sensor
 
@@ -123,7 +129,7 @@ https://github.com/user-attachments/assets/cd5f517f-bf19-4a19-b95b-86a3a4ac1ba7
 
 A recording holds, for each sample, the taxel forces (each in its taxel's frame), the joint angles and the joint torques of the finger carrying the sensor, while an object is pressed at random places on the sensor. The paper uses 2400 samples: 2 min at 20 Hz ([arXiv 2605.28812](https://arxiv.org/html/2605.28812v1), Appendix A).
 
-File format: [Recording format](docs/theory/taxel-orientation.md#recording-format).
+File format: [Recording format](https://github.com/opatiny/nb-touch/blob/main/docs/theory/taxel-orientation.md#recording-format).
 
 Synthetic recording of 2400 samples on the 3×3 grid above, mounted on a 4-joint finger, with true taxel orientations (the orientations on the real hardware) up to 20° away from the geometry's:
 
@@ -137,9 +143,9 @@ recording = synthetic_recording(sensor, true_orientations, num_samples=2400, rng
 save_recording(recording, "results/recording")  # recording.npz and recording.yaml
 ```
 
-How the joint torques and taxel forces are simulated: [docs/synthetic-recording.md](docs/synthetic-recording.md).
+How the joint torques and taxel forces are simulated: [docs/synthetic-recording.md](https://github.com/opatiny/nb-touch/blob/main/docs/synthetic-recording.md).
 
-With real hardware, build a `Recording` from the measured arrays instead (see [Reading and writing a recording](docs/theory/taxel-orientation.md#reading-and-writing-a-recording)).
+With real hardware, build a `Recording` from the measured arrays instead (see [Reading and writing a recording](https://github.com/opatiny/nb-touch/blob/main/docs/theory/taxel-orientation.md#reading-and-writing-a-recording)).
 
 ### Use recording to compute the taxel orientations
 
@@ -160,7 +166,7 @@ print(np.degrees(before).max().round(1), np.degrees(after).max().round(1))  # 19
 
 `result.geometry` is the sensor geometry with the calibrated orientations, `result.losses` the torque MSE at each step. The paper's 100 Adam steps are the default; with `settings=CalibrationSettings(steps=1000)`, the largest is expected to drop to 1.0°.
 
-For more details, see [docs/theory/taxel-orientation.md](docs/theory/taxel-orientation.md).
+For more details, see [docs/theory/taxel-orientation.md](https://github.com/opatiny/nb-touch/blob/main/docs/theory/taxel-orientation.md).
 
 ## Recording calibration data on a real hand
 
