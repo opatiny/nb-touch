@@ -55,12 +55,12 @@ MOVING = False
 """False to keep the true CoP and CoP force still, at their position at time 0."""
 
 # contact settings
-SETTINGS = ContactSettings(min_taxels=1, sigma=0.01, regularisation=0.05)
+SETTINGS = ContactSettings(min_taxels=1, sigma=0.003, regularisation=0.1)
 """Contact detection settings, see `ContactSettings` in
-`src/nb_touch/contact/contacts.py`. The same σ is used to make the taxel forces."""
+`src/nb_touch/contact/contacts.py`. σ is used to make the taxel forces."""
 
 # display options
-COP_SCALE_M_PER_N = 0.006
+COP_SCALE_M_PER_N = 0.02
 """CoP force arrow length per newton, in m."""
 
 TAXEL_SCALE_M_PER_N = 0.02
