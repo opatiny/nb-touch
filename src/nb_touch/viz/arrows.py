@@ -7,6 +7,11 @@ They are redrawn every frame and change nothing in the model. Taken from `dextHa
 import mujoco
 import numpy as np
 
+ARROW_SIZE_PER_LENGTH = 2.0
+"""`size[2]` an `mjGEOM_ARROW` needs per metre of drawn length. MuJoCo 3.16 draws an
+arrow geom half as long as the `size[2]` `mjv_connector` gives it: measured by us,
+against a cylinder between the same points."""
+
 
 def force_arrows(
     starts, forces, scale: float, min_force: float = 0.0, tip_at_point: bool = False
@@ -65,6 +70,8 @@ def add_connector(scene, geom_type, start, end, thickness: float, rgba) -> bool:
         np.asarray(start, dtype=float),
         np.asarray(end, dtype=float),
     )
+    if geom_type == mujoco.mjtGeom.mjGEOM_ARROW:
+        geom.size[2] *= ARROW_SIZE_PER_LENGTH
     scene.ngeom += 1
     return True
 

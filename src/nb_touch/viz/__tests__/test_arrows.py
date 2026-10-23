@@ -3,7 +3,15 @@ import pytest
 
 mujoco = pytest.importorskip("mujoco")
 
-from nb_touch.viz.arrows import draw_arrows, force_arrows, split_arrow  # noqa: E402
+from nb_touch.viz.arrows import (  # noqa: E402
+    ARROW_SIZE_PER_LENGTH,
+    add_connector,
+    draw_arrows,
+    force_arrows,
+    split_arrow,
+)
+
+ONES = np.ones(4, dtype=np.float32)
 
 
 def test_force_arrows_scale_the_force():
@@ -59,7 +67,7 @@ def test_draw_arrows_draws_a_shaft_and_a_head(make_scene):
     assert shaft.type == mujoco.mjtGeom.mjGEOM_CYLINDER
     assert head.type == mujoco.mjtGeom.mjGEOM_ARROW
     assert head.pos == pytest.approx([0, 0, 0.09])
-    assert head.size[2] == pytest.approx(0.01)
+    assert head.size[2] == pytest.approx(0.01 * ARROW_SIZE_PER_LENGTH)
     # thickness is a diameter; MuJoCo sizes connectors by radius.
     assert shaft.size[0] == pytest.approx(0.002)
     assert head.size[0] == pytest.approx(0.002)
@@ -78,7 +86,9 @@ def test_draw_arrows_heads_do_not_grow_with_the_force(make_scene):
         for i in range(scene.ngeom)
         if scene.geoms[i].type == mujoco.mjtGeom.mjGEOM_ARROW
     ]
-    assert [h.size[2] for h in heads] == pytest.approx([0.004, 0.004])
+    assert [h.size[2] for h in heads] == pytest.approx(
+        [0.004 * ARROW_SIZE_PER_LENGTH] * 2
+    )
 
 
 def test_draw_arrows_short_arrow_is_only_a_head(make_scene):
@@ -87,7 +97,7 @@ def test_draw_arrows_short_arrow_is_only_a_head(make_scene):
         scene, [(np.zeros(3), np.array([0.001, 0, 0]))], (1, 1, 1, 1), head_length=0.004
     )
     assert scene.ngeom == 1
-    assert scene.geoms[0].size[2] == pytest.approx(0.001)
+    assert scene.geoms[0].size[2] == pytest.approx(0.001 * ARROW_SIZE_PER_LENGTH)
 
 
 def test_draw_arrows_skips_zero_length_arrows(make_scene):
@@ -103,6 +113,17 @@ def test_draw_arrows_appends_after_existing_geoms(make_scene):
     draw_arrows(scene, [arrow, arrow], (0, 1, 0, 1))
     assert scene.ngeom == 6
     assert scene.geoms[5].rgba == pytest.approx([0, 1, 0, 1])
+
+
+def test_add_connector_lengthens_only_arrows(make_scene):
+    scene = make_scene(10)
+    end = [0, 0, 0.01]
+    add_connector(scene, mujoco.mjtGeom.mjGEOM_ARROW, np.zeros(3), end, 0.001, ONES)
+    add_connector(scene, mujoco.mjtGeom.mjGEOM_CYLINDER, np.zeros(3), end, 0.001, ONES)
+    arrow, cylinder = scene.geoms[0], scene.geoms[1]
+    assert arrow.size[2] == pytest.approx(0.01 * ARROW_SIZE_PER_LENGTH)
+    # A cylinder's size[2] is its half-length.
+    assert cylinder.size[2] == pytest.approx(0.005)
 
 
 def test_draw_arrows_stops_at_maxgeom(make_scene):
