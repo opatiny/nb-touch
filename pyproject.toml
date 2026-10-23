@@ -9,14 +9,32 @@ authors = [
     { name = "Oceane Patiny", email = "oceane@patiny.com" }
 ]
 requires-python = ">=3.12"
-dependencies = [
-    "numpy",
-    "pyyaml",
+keywords = ["tactile", "touch sensor", "taxel", "robotics", "center of pressure"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed",
 ]
+dependencies = [
+    "numpy>=1.26",
+    "pyyaml>=6.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/opatiny/nb-touch"
+Repository = "https://github.com/opatiny/nb-touch"
+Issues = "https://github.com/opatiny/nb-touch/issues"
+Paper = "https://arxiv.org/abs/2605.28812"
 
 [project.optional-dependencies]
 calibration = [
-    "torch",
+    "torch>=2.2",
 ]
 viz = [
     "mujoco>=3.16.0",
@@ -31,6 +49,9 @@ dev = [
 [build-system]
 requires = ["uv_build>=0.12.15,<0.13.0"]
 build-backend = "uv_build"
+
+[tool.uv.build-backend]
+wheel-exclude = ["**/__tests__"]
 
 [tool.pytest.ini_options]
 testpaths = ["src"]
