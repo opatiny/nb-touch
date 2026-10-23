@@ -340,16 +340,19 @@ source = { editable = "." }
 dependencies = [
     { name = "numpy" },
     { name = "pyyaml" },
-    { name = "torch" },
 ]
 
 [package.optional-dependencies]
+calibration = [
+    { name = "torch" },
+]
 viz = [
     { name = "mujoco" },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "nb-touch", extra = ["calibration"] },
     { name = "pytest" },
 ]
 
@@ -358,12 +361,15 @@ requires-dist = [
     { name = "mujoco", marker = "extra == 'viz'", specifier = ">=3.16.0" },
     { name = "numpy" },
     { name = "pyyaml" },
-    { name = "torch" },
+    { name = "torch", marker = "extra == 'calibration'" },
 ]
-provides-extras = ["viz"]
+provides-extras = ["calibration", "viz"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest" }]
+dev = [
+    { name = "nb-touch", extras = ["calibration"] },
+    { name = "pytest" },
+]
 
 [[package]]
 name = "networkx"

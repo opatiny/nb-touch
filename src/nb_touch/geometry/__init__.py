@@ -7,7 +7,6 @@ from nb_touch.geometry.frames import (
 )
 from nb_touch.geometry.neighbours import taxel_neighbours
 from nb_touch.geometry.normals import taxel_normals
-from nb_touch.geometry.so3 import project_to_so3
 from nb_touch.geometry.synthetic import cylinder_sensor, plane_sensor, sphere_sensor
 from nb_touch.geometry.transforms import rotate_vectors, transform_points
 
@@ -15,7 +14,6 @@ __all__ = [
     "cylinder_sensor",
     "normals_from_rotations",
     "plane_sensor",
-    "project_to_so3",
     "rotate_vectors",
     "sphere_sensor",
     "taxel_neighbours",

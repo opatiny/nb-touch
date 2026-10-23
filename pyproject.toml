@@ -12,16 +12,19 @@ requires-python = ">=3.12"
 dependencies = [
     "numpy",
     "pyyaml",
-    "torch",
 ]
 
 [project.optional-dependencies]
+calibration = [
+    "torch",
+]
 viz = [
     "mujoco>=3.16.0",
 ]
 
 [dependency-groups]
 dev = [
+    "nb-touch[calibration]",
     "pytest",
 ]
 
