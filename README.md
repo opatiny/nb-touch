@@ -107,9 +107,14 @@ Why the green and red arrows don't match perfectly? See [Known bias](docs/theory
 
 ### Planar sensor
 
+https://github.com/user-attachments/assets/189b1fb1-31b1-47bc-b6a7-87e07696a47e
+
 ### Cylindrical sensor
+https://github.com/user-attachments/assets/d66bacdf-331c-4f35-a88c-500e3954136c
 
 ### Spherical sensor
+
+https://github.com/user-attachments/assets/cd5f517f-bf19-4a19-b95b-86a3a4ac1ba7
 
 ## Taxel orientation detection
 
