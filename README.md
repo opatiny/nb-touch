@@ -1,5 +1,7 @@
 # Beyond binary touch sensing
 
+[![PyPI](https://img.shields.io/pypi/v/nb-touch)](https://pypi.org/project/nb-touch/)
+
 This library is useful for: processing data of a robot equipped with taxel array sensors, as well as to detect the taxels orientation based on experimental measurements.
 
 Hardware-agnostic python library implementing the main functionalities of the article: Pan, Jiahe, et al. "Beyond Binary: Sim-to-Real Dexterous Manipulation with Physics-Grounded Contact Representation." arXiv preprint arXiv:2605.28812 (2026).
