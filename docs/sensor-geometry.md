@@ -56,7 +56,7 @@ from nb_touch.io import load_sensor_geometry
 
 geometry = load_sensor_geometry("results/two_taxels.yaml")
 geometry.positions  # [[0., 0., 0.], [0.003, 0., 0.]], converted to m
-geometry.rotations  # None
+geometry.orientations  # None
 ```
 
 ## Finding neighbouring taxels
@@ -100,7 +100,7 @@ from nb_touch.geometry.synthetic import synthetic_sensor
 
 sensor = synthetic_sensor("cylinder", num_taxels=40, spacing=0.003, radius=0.01)
 sensor.positions  # (40, 3), in m
-sensor.rotations  # (40, 3, 3), taxel frames to sensor frame
+sensor.orientations  # (40, 3, 3), taxel frames to sensor frame
 ```
 
 `spacing` (in m) applies to the plane and cylinder only, `radius` (in m) to the cylinder and sphere.

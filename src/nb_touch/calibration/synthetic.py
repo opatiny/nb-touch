@@ -1,4 +1,4 @@
-"""Synthetic finger and recordings with known taxel rotations, for tests and demos.
+"""Synthetic finger and recordings with known taxel orientations, for tests and demos.
 
 The finger is held still, as in the paper's data collection (a stiff PD controller
 holds the joints while an object is pressed on the fingertip), so its Jacobian does
@@ -14,7 +14,7 @@ from nb_touch.contact.cop_model import (
     cop_to_taxel_forces,
     taxel_force_matrices,
 )
-from nb_touch.geometry.frames import normals_from_rotations
+from nb_touch.geometry.frames import normals_from_orientations
 from nb_touch.geometry.transforms import rotate_vectors, rotations_from_vectors
 from nb_touch.io.recordings import Recording
 from nb_touch.io.sensor_geometry import SensorGeometry
@@ -61,15 +61,15 @@ def finger_jacobian(q, link, point) -> np.ndarray:
     return revolute_jacobian(FINGER_AXES, FINGER_ORIGINS, point)
 
 
-def perturbed_rotations(rotations, max_angle: float, rng) -> np.ndarray:
-    """Return each rotation `(n, 3, 3)` turned about a random axis of its own frame,
+def perturbed_orientations(orientations, max_angle: float, rng) -> np.ndarray:
+    """Return each orientation `(n, 3, 3)` turned about a random axis of its own frame,
     by a random angle up to `max_angle`, in rad.
     """
-    count = len(rotations)
+    count = len(orientations)
     axes = rng.normal(size=(count, 3))
     axes /= np.linalg.norm(axes, axis=1, keepdims=True)
     angles = rng.uniform(0.0, max_angle, size=(count, 1))
-    return np.asarray(rotations) @ rotations_from_vectors(axes * angles)
+    return np.asarray(orientations) @ rotations_from_vectors(axes * angles)
 
 
 def random_cop_force(normal, normal_range, max_slip: float, rng) -> np.ndarray:
@@ -105,7 +105,7 @@ def model_torques(positions, normals, forces, settings: ContactSettings):
 
 def synthetic_recording(
     geometry: SensorGeometry,
-    rotations,
+    orientations,
     num_samples: int,
     rng,
     normal_range=(0.5, 3.0),
@@ -117,15 +117,15 @@ def synthetic_recording(
     """Simulate random contacts on the fingertip of the synthetic finger.
 
     Each sample presses at a random taxel: the CoP model turns the CoP force into
-    taxel forces with the geometry's normals, and `rotations` take them to the
+    taxel forces with the geometry's normals, and `orientations` take them to the
     taxel frames. The joint torques, `-J^T f_cop`, come from the CoP and CoP force
     estimated back from the taxel forces (`model_torques`), so with the true
-    rotations the calibration's model explains them exactly, without the bias of
+    orientations the calibration's model explains them exactly, without the bias of
     the estimate (`docs/theory/cop.md`, Known bias).
 
     Args:
-        geometry: Sensor geometry with rotations, giving the normals.
-        rotations: True taxel rotations `(T, 3, 3)`, taxel frame to sensor frame.
+        geometry: Sensor geometry with orientations, giving the normals.
+        orientations: True taxel orientations `(T, 3, 3)`, taxel frame to sensor frame.
         num_samples: Number of samples N.
         rng: A `numpy.random.Generator`.
         normal_range: Smallest and largest push, in N.
@@ -136,7 +136,7 @@ def synthetic_recording(
             calibration's.
     """
     positions = geometry.positions
-    normals = normals_from_rotations(geometry.rotations)
+    normals = normals_from_orientations(geometry.orientations)
     settings = settings.from_geometry(positions)
     forces, torques = [], []
     for taxel in rng.integers(len(positions), size=num_samples):
@@ -145,7 +145,9 @@ def synthetic_recording(
         cop_force = random_cop_force(normal, normal_range, max_slip, rng)
         matrices = taxel_force_matrices(positions, normals, cop, normal, settings.sigma)
         sensor_forces = cop_to_taxel_forces(cop_force, matrices)
-        forces.append(rotate_vectors(np.transpose(rotations, (0, 2, 1)), sensor_forces))
+        forces.append(
+            rotate_vectors(np.transpose(orientations, (0, 2, 1)), sensor_forces)
+        )
         torques.append(model_torques(positions, normals, sensor_forces, settings))
     forces, torques = np.array(forces), np.array(torques)
     return Recording(

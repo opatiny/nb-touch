@@ -14,7 +14,7 @@ from nb_touch.utils.units import length_to_metres_factor
 from nb_touch.utils.yaml_io import read_yaml, write_yaml
 
 SENSOR_FRAME = "sensor"
-"""Frame of the positions and rotations in the file."""
+"""Frame of the positions and orientations in the file."""
 
 DECIMALS = 6
 """Decimals kept for positions and rotation entries when writing."""
@@ -28,22 +28,22 @@ class SensorGeometry:
         name: Sensor model name.
         positions: `(n, 3)` taxel positions in metres, row `i` is taxel `i` of the
             force stream.
-        rotations: `(n, 3, 3)` rotations from each taxel frame to the sensor frame,
-            or `None` when unknown.
+        orientations: `(n, 3, 3)` rotations from each taxel frame to the sensor
+            frame, or `None` when unknown.
     """
 
     name: str
     positions: np.ndarray
-    rotations: np.ndarray | None = None
+    orientations: np.ndarray | None = None
 
     def __post_init__(self):
         positions = np.asarray(self.positions, dtype=float)
         check_positions(positions)
         object.__setattr__(self, "positions", positions)
-        if self.rotations is not None:
-            rotations = np.asarray(self.rotations, dtype=float)
-            check_rotations(rotations, len(positions))
-            object.__setattr__(self, "rotations", rotations)
+        if self.orientations is not None:
+            orientations = np.asarray(self.orientations, dtype=float)
+            check_orientations(orientations, len(positions))
+            object.__setattr__(self, "orientations", orientations)
 
     @property
     def num_taxels(self) -> int:
@@ -57,11 +57,11 @@ def check_positions(positions: np.ndarray) -> None:
         raise ValueError(f"expected (n, 3) positions, got {positions.shape}")
 
 
-def check_rotations(rotations: np.ndarray, num_taxels: int) -> None:
-    """Raise a `ValueError` unless `rotations` has shape `(num_taxels, 3, 3)`."""
-    if rotations.shape != (num_taxels, 3, 3):
+def check_orientations(orientations: np.ndarray, num_taxels: int) -> None:
+    """Raise a `ValueError` unless `orientations` has shape `(num_taxels, 3, 3)`."""
+    if orientations.shape != (num_taxels, 3, 3):
         raise ValueError(
-            f"expected ({num_taxels}, 3, 3) rotations, got {rotations.shape}"
+            f"expected ({num_taxels}, 3, 3) orientations, got {orientations.shape}"
         )
 
 
@@ -104,29 +104,29 @@ def parse_positions(taxels: list[dict], units: str) -> np.ndarray:
     return factor * positions
 
 
-def parse_rotations(taxels: list[dict]) -> np.ndarray | None:
-    """Read the taxel rotations, which all taxels have or none has.
+def parse_orientations(taxels: list[dict]) -> np.ndarray | None:
+    """Read the taxel orientations, which all taxels have or none has.
 
     Args:
         taxels: The `taxels` entries of the file.
 
     Returns:
-        `(n, 3, 3)` rotations, or `None` if no taxel has one.
+        `(n, 3, 3)` orientations, or `None` if no taxel has one.
 
     Raises:
         ValueError: If only some taxels have a rotation.
     """
-    with_rotation = sum("rotation" in taxel for taxel in taxels)
-    if with_rotation == 0:
+    with_orientation = sum("rotation" in taxel for taxel in taxels)
+    if with_orientation == 0:
         return None
-    if with_rotation != len(taxels):
+    if with_orientation != len(taxels):
         raise ValueError(
-            f"{with_rotation} of {len(taxels)} taxels have a rotation: "
+            f"{with_orientation} of {len(taxels)} taxels have a rotation: "
             "give it for all taxels or none"
         )
-    rotations = np.array([taxel["rotation"] for taxel in taxels], dtype=float)
-    check_rotations(rotations, len(taxels))
-    return rotations
+    orientations = np.array([taxel["rotation"] for taxel in taxels], dtype=float)
+    check_orientations(orientations, len(taxels))
+    return orientations
 
 
 def geometry_from_dict(data: dict) -> SensorGeometry:
@@ -141,7 +141,7 @@ def geometry_from_dict(data: dict) -> SensorGeometry:
     return SensorGeometry(
         name=require_field(data, "name"),
         positions=parse_positions(taxels, require_field(data, "units")),
-        rotations=parse_rotations(taxels),
+        orientations=parse_orientations(taxels),
     )
 
 
@@ -160,10 +160,10 @@ def geometry_to_dict(
     """
     positions = np.round(geometry.positions / length_to_metres_factor(units), decimals)
     taxels = [{"position": position} for position in positions.tolist()]
-    if geometry.rotations is not None:
-        rotations = np.round(geometry.rotations, decimals).tolist()
-        for taxel, rotation in zip(taxels, rotations, strict=True):
-            taxel["rotation"] = rotation
+    if geometry.orientations is not None:
+        orientations = np.round(geometry.orientations, decimals).tolist()
+        for taxel, orientation in zip(taxels, orientations, strict=True):
+            taxel["rotation"] = orientation
     return {
         "name": geometry.name,
         "frame": SENSOR_FRAME,

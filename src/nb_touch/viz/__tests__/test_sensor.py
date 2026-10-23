@@ -4,7 +4,7 @@ import pytest
 mujoco = pytest.importorskip("mujoco")
 
 from nb_touch.contact.contacts import ContactSettings, find_contacts  # noqa: E402
-from nb_touch.geometry.frames import normals_from_rotations  # noqa: E402
+from nb_touch.geometry.frames import normals_from_orientations  # noqa: E402
 from nb_touch.geometry.neighbours import taxel_neighbours  # noqa: E402
 from nb_touch.geometry.synthetic import plane_sensor  # noqa: E402
 from nb_touch.viz.sensor import (  # noqa: E402
@@ -86,7 +86,7 @@ def test_zero_cop_force_is_only_a_sphere(make_scene):
 def test_contacts_drawn(make_scene):
     forces = np.zeros((9, 3))
     forces[[0, 1, 3]] = [0.0, 0.0, 1.0]
-    normals = normals_from_rotations(PLANE.rotations)
+    normals = normals_from_orientations(PLANE.orientations)
     contacts = find_contacts(
         PLANE.positions,
         normals,

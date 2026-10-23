@@ -14,11 +14,11 @@ from nb_touch.contact.cop_model import (
     taxel_to_cop_force,
     unit,
 )
-from nb_touch.geometry.frames import normals_from_rotations
+from nb_touch.geometry.frames import normals_from_orientations
 from nb_touch.geometry.synthetic import cylinder_sensor, plane_sensor, sphere_sensor
 
 PLANE = plane_sensor(rows=5, cols=5, spacing=0.003)
-PLANE_NORMALS = normals_from_rotations(PLANE.rotations)
+PLANE_NORMALS = normals_from_orientations(PLANE.orientations)
 UP = np.array([0.0, 0.0, 1.0])
 
 
@@ -51,7 +51,7 @@ def test_cop_normal_on_plane_is_up():
 
 def test_cop_normal_at_taxel_is_its_normal():
     sensor = sphere_sensor()
-    normals = normals_from_rotations(sensor.rotations)
+    normals = normals_from_orientations(sensor.orientations)
     np.testing.assert_allclose(
         cop_normal(sensor.positions, normals, sensor.positions[5]), normals[5]
     )
@@ -109,7 +109,7 @@ def test_matrix_at_cop_is_identity_on_plane():
 @pytest.mark.parametrize("sensor", [PLANE, cylinder_sensor(), sphere_sensor()])
 @pytest.mark.parametrize("sigma", [0.002, 0.003, 1.0])
 def test_round_trip_recovers_cop_force(sensor, sigma):
-    normals = normals_from_rotations(sensor.rotations)
+    normals = normals_from_orientations(sensor.orientations)
     cop = sensor.positions.mean(axis=0)
     normal = cop_normal(sensor.positions, normals, cop)
     matrices = taxel_force_matrices(sensor.positions, normals, cop, normal, sigma)

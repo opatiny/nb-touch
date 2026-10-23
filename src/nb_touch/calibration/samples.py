@@ -1,9 +1,9 @@
 """Everything of a recording the taxel orientation calibration needs, computed once:
-the parts of the CoP model that do not depend on the taxel rotations.
+the parts of the CoP model that do not depend on the taxel orientations.
 
 The CoP position uses the force norms only and the normals come from the prior
-rotations, so the CoP, the Jacobian at it and the ridge solve are fixed: only the
-taxel forces in the sensor frame, `R_i f_i`, change with the rotations. See
+orientations, so the CoP, the Jacobian at it and the ridge solve are fixed: only the
+taxel forces in the sensor frame, `R_i f_i`, change with the orientations. See
 `docs/theory/taxel-orientation.md`.
 """
 

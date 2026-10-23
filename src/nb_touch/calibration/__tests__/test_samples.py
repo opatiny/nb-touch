@@ -8,12 +8,12 @@ from nb_touch.calibration.samples import (
 )
 from nb_touch.calibration.synthetic import finger_jacobian, synthetic_recording
 from nb_touch.contact.contacts import ContactSettings
-from nb_touch.geometry.frames import normals_from_rotations
+from nb_touch.geometry.frames import normals_from_orientations
 from nb_touch.geometry.synthetic import plane_sensor
 from nb_touch.io.recordings import Recording
 
 SENSOR = plane_sensor()
-NORMALS = normals_from_rotations(SENSOR.rotations)
+NORMALS = normals_from_orientations(SENSOR.orientations)
 
 
 def recording_with_forces(forces) -> Recording:
@@ -58,7 +58,7 @@ def test_single_active_taxel_gives_its_force():
 
 def test_samples_skip_inactive_and_keep_indices_aligned():
     rng = np.random.default_rng(0)
-    recording = synthetic_recording(SENSOR, SENSOR.rotations, 3, rng)
+    recording = synthetic_recording(SENSOR, SENSOR.orientations, 3, rng)
     forces = recording.taxel_forces_n.copy()
     forces[1] = 0.0
     samples = calibration_samples(
@@ -75,7 +75,7 @@ def test_samples_skip_inactive_and_keep_indices_aligned():
 
 def test_samples_reproduce_recorded_torques():
     rng = np.random.default_rng(1)
-    recording = synthetic_recording(SENSOR, SENSOR.rotations, 4, rng)
+    recording = synthetic_recording(SENSOR, SENSOR.orientations, 4, rng)
     samples = calibration_samples(recording, SENSOR.positions, NORMALS, finger_jacobian)
     parts = np.einsum("eij,ej->ei", samples.operators, samples.forces)
     cop_forces = np.zeros((samples.num_samples, 3))
@@ -86,7 +86,7 @@ def test_samples_reproduce_recorded_torques():
 
 def test_jacobian_gets_angles_and_link():
     recording = synthetic_recording(
-        SENSOR, SENSOR.rotations, 2, np.random.default_rng(2)
+        SENSOR, SENSOR.orientations, 2, np.random.default_rng(2)
     )
     calls = []
 

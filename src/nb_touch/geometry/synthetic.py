@@ -3,7 +3,7 @@ cylinder and a sphere. Positions in metres, sensor frame with z outward."""
 
 import numpy as np
 
-from nb_touch.geometry.frames import rotations_from_normals
+from nb_touch.geometry.frames import orientations_from_normals
 from nb_touch.io.sensor_geometry import SensorGeometry
 
 SHAPES = ("plane", "cylinder", "sphere")
@@ -31,7 +31,7 @@ def plane_sensor(
     x, y = grid(rows, cols, spacing)
     positions = np.stack([x, y, np.zeros_like(x)], axis=1)
     normals = np.tile([0.0, 0.0, 1.0], (len(positions), 1))
-    return SensorGeometry("plane", positions, rotations_from_normals(normals))
+    return SensorGeometry("plane", positions, orientations_from_normals(normals))
 
 
 def cylinder_sensor(
@@ -55,7 +55,7 @@ def cylinder_sensor(
     angle, y = angle.ravel(), y.ravel()
     normals = np.stack([np.sin(angle), np.zeros_like(angle), np.cos(angle)], axis=1)
     positions = radius * normals + np.stack([np.zeros_like(y), y, np.zeros_like(y)], 1)
-    return SensorGeometry("cylinder", positions, rotations_from_normals(normals))
+    return SensorGeometry("cylinder", positions, orientations_from_normals(normals))
 
 
 def sphere_sensor(
@@ -79,7 +79,9 @@ def sphere_sensor(
     normals = np.stack(
         [sin_polar * np.cos(azimuth), sin_polar * np.sin(azimuth), cos_polar], axis=1
     )
-    return SensorGeometry("sphere", radius * normals, rotations_from_normals(normals))
+    return SensorGeometry(
+        "sphere", radius * normals, orientations_from_normals(normals)
+    )
 
 
 def near_square_grid(num_taxels: int) -> tuple[int, int]:
@@ -93,7 +95,7 @@ def first_taxels(geometry: SensorGeometry, num_taxels: int) -> SensorGeometry:
     return SensorGeometry(
         geometry.name,
         geometry.positions[:num_taxels],
-        geometry.rotations[:num_taxels],
+        geometry.orientations[:num_taxels],
     )
 
 

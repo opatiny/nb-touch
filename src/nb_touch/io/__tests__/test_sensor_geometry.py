@@ -26,7 +26,7 @@ def rotations_about_z(angles):
     )
 
 
-ROTATIONS = rotations_about_z(np.array([0.0, 0.5, -2.0]))
+ORIENTATIONS = rotations_about_z(np.array([0.0, 0.5, -2.0]))
 
 
 def valid_dict():
@@ -40,17 +40,17 @@ def valid_dict():
 
 
 @pytest.mark.parametrize("units", ["mm", "m"])
-@pytest.mark.parametrize("rotations", [None, ROTATIONS])
-def test_save_load_round_trip(tmp_path, units, rotations):
-    geometry = SensorGeometry("test-sensor", POSITIONS_M, rotations)
+@pytest.mark.parametrize("orientations", [None, ORIENTATIONS])
+def test_save_load_round_trip(tmp_path, units, orientations):
+    geometry = SensorGeometry("test-sensor", POSITIONS_M, orientations)
     path = save_sensor_geometry(geometry, tmp_path / "geometry.yaml", units=units)
     loaded = load_sensor_geometry(path)
     assert loaded.name == "test-sensor"
     np.testing.assert_allclose(loaded.positions, POSITIONS_M, atol=1e-9)
-    if rotations is None:
-        assert loaded.rotations is None
+    if orientations is None:
+        assert loaded.orientations is None
     else:
-        np.testing.assert_allclose(loaded.rotations, rotations, atol=1e-6)
+        np.testing.assert_allclose(loaded.orientations, orientations, atol=1e-6)
 
 
 def test_positions_converted_from_mm_to_metres():
@@ -86,7 +86,7 @@ def test_zero_taxels():
     geometry = geometry_from_dict(data)
     assert geometry.num_taxels == 0
     assert geometry.positions.shape == (0, 3)
-    assert geometry.rotations is None
+    assert geometry.orientations is None
 
 
 @pytest.mark.parametrize("key", ["name", "frame", "units", "num_taxels", "taxels"])
@@ -135,30 +135,30 @@ def test_positions_with_different_lengths_raise():
         geometry_from_dict(data)
 
 
-def test_rotation_on_some_taxels_only_raises():
+def test_orientation_on_some_taxels_only_raises():
     data = valid_dict()
     data["taxels"][0]["rotation"] = np.eye(3).tolist()
     with pytest.raises(ValueError, match="1 of 2 taxels have a rotation"):
         geometry_from_dict(data)
 
 
-def test_rotation_with_wrong_shape_raises():
+def test_orientation_with_wrong_shape_raises():
     data = valid_dict()
     for taxel in data["taxels"]:
         taxel["rotation"] = [[1.0, 0.0], [0.0, 1.0]]
-    with pytest.raises(ValueError, match=r"\(2, 3, 3\) rotations"):
+    with pytest.raises(ValueError, match=r"\(2, 3, 3\) orientations"):
         geometry_from_dict(data)
 
 
-def test_geometry_rejects_rotation_count_mismatch():
-    with pytest.raises(ValueError, match=r"\(3, 3, 3\) rotations"):
-        SensorGeometry("s", POSITIONS_M, ROTATIONS[:2])
+def test_geometry_rejects_orientation_count_mismatch():
+    with pytest.raises(ValueError, match=r"\(3, 3, 3\) orientations"):
+        SensorGeometry("s", POSITIONS_M, ORIENTATIONS[:2])
 
 
 def test_geometry_converts_lists_to_float_arrays():
     geometry = SensorGeometry("s", [[1, 2, 3]], [np.eye(3, dtype=int).tolist()])
     assert geometry.positions.dtype == float
-    assert geometry.rotations.dtype == float
+    assert geometry.orientations.dtype == float
 
 
 def test_load_missing_file_raises(tmp_path):

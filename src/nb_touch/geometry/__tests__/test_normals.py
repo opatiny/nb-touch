@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from nb_touch.geometry.frames import normals_from_rotations
+from nb_touch.geometry.frames import normals_from_orientations
 from nb_touch.geometry.normals import (
     nearest_neighbours,
     pairwise_distances,
@@ -33,7 +33,7 @@ def test_plane_normals_are_unit_and_along_z_on_a_plane():
     [(plane_sensor(), 1e-9), (cylinder_sensor(), 0.1), (sphere_sensor(), 0.1)],
 )
 def test_taxel_normals_match_known_normals(sensor, tolerance):
-    expected = normals_from_rotations(sensor.rotations)
+    expected = normals_from_orientations(sensor.orientations)
     normals = taxel_normals(sensor.positions)
     # Outward everywhere, and close to the true normal.
     assert np.all(np.sum(normals * expected, axis=1) > 1.0 - tolerance)

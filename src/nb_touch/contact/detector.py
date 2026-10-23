@@ -8,7 +8,10 @@ import numpy as np
 from nb_touch.contact.active import taxel_norms
 from nb_touch.contact.contacts import Contact, ContactSettings, contacts_from_active
 from nb_touch.contact.filters import ThresholdFilter
-from nb_touch.geometry.frames import normals_from_rotations, with_estimated_rotations
+from nb_touch.geometry.frames import (
+    normals_from_orientations,
+    with_estimated_orientations,
+)
 from nb_touch.geometry.neighbours import taxel_neighbours
 from nb_touch.geometry.transforms import rotate_vectors
 from nb_touch.io.sensor_geometry import SensorGeometry
@@ -18,7 +21,7 @@ class ContactDetector:
     """Finds the contacts of one sensor in every frame.
 
     The geometry-only work (normals, neighbours) is done once here. Missing taxel
-    rotations are estimated from the positions.
+    orientations are estimated from the positions.
 
     Args:
         geometry: Sensor geometry.
@@ -35,10 +38,10 @@ class ContactDetector:
         settings: ContactSettings = ContactSettings(),
         active_filter=None,
     ):
-        geometry = with_estimated_rotations(geometry)
+        geometry = with_estimated_orientations(geometry)
         self.positions = geometry.positions
-        self.rotations = geometry.rotations
-        self.normals = normals_from_rotations(geometry.rotations)
+        self.orientations = geometry.orientations
+        self.normals = normals_from_orientations(geometry.orientations)
         self.neighbours = taxel_neighbours(geometry.positions)
         self.settings = settings.from_geometry(geometry.positions)
         self.filter = active_filter or ThresholdFilter(settings.threshold)
@@ -58,7 +61,7 @@ class ContactDetector:
         """
         forces = np.asarray(forces, dtype=float)
         if in_taxel_frames:
-            forces = rotate_vectors(self.rotations, forces)
+            forces = rotate_vectors(self.orientations, forces)
         active = self.filter.update(taxel_norms(forces))
         return contacts_from_active(
             active, self.positions, self.normals, forces, self.neighbours, self.settings

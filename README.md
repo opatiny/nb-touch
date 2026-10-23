@@ -63,9 +63,9 @@ from nb_touch.contact import (
     spacing_sigma,
     taxel_force_matrices,
 )
-from nb_touch.geometry import normals_from_rotations
+from nb_touch.geometry import normals_from_orientations
 
-normals = normals_from_rotations(sensor.rotations)
+normals = normals_from_orientations(sensor.orientations)
 cop = np.zeros(3)
 normal = cop_normal(sensor.positions, normals, cop)
 sigma = spacing_sigma(sensor.positions)  # 1.5 x the median taxel spacing

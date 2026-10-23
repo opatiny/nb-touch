@@ -14,12 +14,12 @@ from nb_touch.contact.cop_model import (
     spacing_sigma,
     taxel_force_matrices,
 )
-from nb_touch.geometry.frames import normals_from_rotations
+from nb_touch.geometry.frames import normals_from_orientations
 from nb_touch.geometry.neighbours import taxel_neighbours
 from nb_touch.geometry.synthetic import plane_sensor, sphere_sensor
 
 PLANE = plane_sensor(rows=9, cols=9, spacing=0.003)
-NORMALS = normals_from_rotations(PLANE.rotations)
+NORMALS = normals_from_orientations(PLANE.orientations)
 NEIGHBOURS = taxel_neighbours(PLANE.positions)
 UP = np.array([0.0, 0.0, 1.0])
 CENTRE = 40  # middle of the 9 x 9 grid
@@ -129,7 +129,7 @@ def test_total_force_is_sum_of_zone_forces():
 
 def test_contact_on_sphere_has_outward_normal():
     sensor = sphere_sensor(radius=0.01, count=60)
-    normals = normals_from_rotations(sensor.rotations)
+    normals = normals_from_orientations(sensor.orientations)
     taxels = np.arange(sensor.num_taxels)
     top = int(np.argmax(sensor.positions[:, 2]))
     cop = sensor.positions[top]
@@ -169,7 +169,7 @@ def test_single_taxel_sensor_falls_back_to_default_sigma():
 
 def test_find_contacts_uses_taxel_spacing_as_sigma():
     sensor = plane_sensor(rows=9, cols=9, spacing=0.005)
-    normals = normals_from_rotations(sensor.rotations)
+    normals = normals_from_orientations(sensor.orientations)
     cop_force = np.array([0.0, 0.0, -2.0])
     matrices = taxel_force_matrices(
         sensor.positions,

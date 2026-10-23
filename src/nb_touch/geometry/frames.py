@@ -1,6 +1,6 @@
 """Local taxel frames, with z along each taxel's outward normal.
 
-`rotation_from_z` and `taxel_rotations` taken from `dextHand`,
+`rotation_from_z` and `taxel_orientations` taken from `dextHand`,
 `src/dexthand/touch/taxels.py`.
 """
 
@@ -35,17 +35,17 @@ def rotation_from_z(normal) -> np.ndarray:
     return np.eye(3) + skew + skew @ skew / (1.0 + cosine)
 
 
-def rotations_from_normals(normals) -> np.ndarray:
+def orientations_from_normals(normals) -> np.ndarray:
     """Return `rotation_from_z` of every normal `(n, 3)`, as `(n, 3, 3)`."""
     return np.array([rotation_from_z(normal) for normal in normals]).reshape(-1, 3, 3)
 
 
-def normals_from_rotations(rotations) -> np.ndarray:
-    """Return the local z axis of every rotation `(n, 3, 3)`, as `(n, 3)`."""
-    return np.asarray(rotations, dtype=float)[..., :, 2]
+def normals_from_orientations(orientations) -> np.ndarray:
+    """Return the local z axis of every orientation `(n, 3, 3)`, as `(n, 3)`."""
+    return np.asarray(orientations, dtype=float)[..., :, 2]
 
 
-def taxel_rotations(positions, neighbours: int = NEIGHBOURS) -> np.ndarray:
+def taxel_orientations(positions, neighbours: int = NEIGHBOURS) -> np.ndarray:
     """Build the local frame of every taxel, z along its estimated normal.
 
     Args:
@@ -53,21 +53,21 @@ def taxel_rotations(positions, neighbours: int = NEIGHBOURS) -> np.ndarray:
         neighbours: Points per plane fit, see `taxel_normals`.
 
     Returns:
-        Rotations `(n, 3, 3)` taking each taxel's local vectors to the sensor frame.
+        Orientations `(n, 3, 3)` taking each taxel's local vectors to the sensor frame.
     """
-    return rotations_from_normals(taxel_normals(positions, neighbours))
+    return orientations_from_normals(taxel_normals(positions, neighbours))
 
 
-def with_estimated_rotations(
+def with_estimated_orientations(
     geometry: SensorGeometry, neighbours: int = NEIGHBOURS
 ) -> SensorGeometry:
-    """Return the geometry, with rotations estimated from the positions if missing.
+    """Return the geometry, with orientations estimated from the positions if missing.
 
     Args:
-        geometry: Sensor geometry, with or without rotations.
+        geometry: Sensor geometry, with or without orientations.
         neighbours: Points per plane fit, see `taxel_normals`.
     """
-    if geometry.rotations is not None:
+    if geometry.orientations is not None:
         return geometry
-    rotations = taxel_rotations(geometry.positions, neighbours)
-    return SensorGeometry(geometry.name, geometry.positions, rotations)
+    orientations = taxel_orientations(geometry.positions, neighbours)
+    return SensorGeometry(geometry.name, geometry.positions, orientations)

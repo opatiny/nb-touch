@@ -18,7 +18,7 @@ import numpy as np
 
 from nb_touch.contact import ContactDetector, ContactSettings, cop_normal
 from nb_touch.contact.cop_model import cop_to_taxel_forces, taxel_force_matrices
-from nb_touch.geometry import normals_from_rotations
+from nb_touch.geometry import normals_from_orientations
 from nb_touch.geometry.synthetic import synthetic_sensor
 from nb_touch.viz.markers import draw_spheres
 from nb_touch.viz.sensor import (
@@ -151,7 +151,7 @@ def main() -> None:
     """Open the viewer and redraw the sensor until it is closed."""
     sensor = synthetic_sensor(SHAPE, NUM_TAXELS)
     positions = sensor.positions
-    normals = normals_from_rotations(sensor.rotations)
+    normals = normals_from_orientations(sensor.orientations)
     detector = ContactDetector(sensor, SETTINGS)
     rng = np.random.default_rng(0)
     model = mujoco.MjModel.from_xml_string(MODEL)
