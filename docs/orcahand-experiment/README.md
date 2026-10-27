@@ -1,5 +1,7 @@
 # Testing taxel frame calibration on the Orca hand touch
 
+The only real hand we have access to is an Orca hand touch.
+
 ## Methods
 
 Create a recording matching the parameters described in the article (Pan et al. 2026, [arXiv 2605.28812](https://arxiv.org/abs/2605.28812)), then try running the calibration and compare initial and final frames.
