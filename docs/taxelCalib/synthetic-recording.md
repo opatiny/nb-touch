@@ -1,6 +1,6 @@
 # Synthetic recording
 
-Simulating a recording of random fingertip contacts with known taxel orientations, to test the [taxel orientation calibration](theory/taxel-orientation.md). Implemented in `nb-touch`, `src/nb_touch/calibration/synthetic.py`.
+Simulating a recording of random fingertip contacts with known taxel orientations, to test the [taxel orientation calibration](taxel-orientation.md). Implemented in `nb-touch`, `src/nb_touch/calibration/synthetic.py`.
 
 ## Finger
 
@@ -24,12 +24,12 @@ For each sample:
   - $n$: unit outward normal at $c$
   - $p$: push, uniform in $[0.5, 3]$ N (default)
   - $s$: shear, perpendicular to $n$, in a random direction, of norm uniform in $[0, 0.5\,p]$ (default)
-- Taxel forces: $f_{cop}$ spread over the taxels with the [CoP model](theory/cop.md), in the sensor frame, then taken to each taxel frame with the true orientation $R_i$ (rotation from the taxel frame to the sensor frame): $f_i = R_i^T f_i^{sensor}$.
-- Joint torques: $\tau = -J(\hat c)^T \hat f_{cop}$, gravity neglected as in the paper (Section 3.3), with $\hat c$ and $\hat f_{cop}$ the CoP and CoP force estimated back from the taxel forces, as the calibration does. With the true orientations, the calibration's model then explains the torques exactly, without the [known bias](theory/cop.md#known-bias) of the estimate.
+- Taxel forces: $f_{cop}$ spread over the taxels with the [CoP model](../cop/cop.md), in the sensor frame, then taken to each taxel frame with the true orientation $R_i$ (rotation from the taxel frame to the sensor frame): $f_i = R_i^T f_i^{sensor}$.
+- Joint torques: $\tau = -J(\hat c)^T \hat f_{cop}$, gravity neglected as in the paper (Section 3.3), with $\hat c$ and $\hat f_{cop}$ the CoP and CoP force estimated back from the taxel forces, as the calibration does. With the true orientations, the calibration's model then explains the torques exactly, without the [known bias](../cop/cop.md#known-bias) of the estimate.
 - Noise (optional): Gaussian, with a standard deviation in N on each force component and in N·m on each torque, 0 by default.
 
 Push range, shear and noise values are chosen by us.
 
 ## Example
 
-See [Generate a recording file](../README.md#generate-a-recording-file) in the README.
+See [Generate a recording file](../../README.md#generate-a-recording-file) in the README.

@@ -18,7 +18,7 @@ Proposed YAML format for the taxel positions and orientations of one sensor mode
 | `taxels[i].position` | `[x, y, z]` in `units`.                                                                                                                   |
 | `taxels[i].rotation` | Optional 3×3 matrix from the taxel frame to the sensor frame, local z along the outward normal. Estimated from the geometry when missing. |
 
-Sensor frame: z points outward through the sensing surface, right-handed. See [Conventions](../README.md#conventions).
+Sensor frame: z points outward through the sensing surface, right-handed. See [Conventions](../../README.md#conventions).
 Inspired by the Orca hand `orca_core` file format.
 
 ## Save and load a geometry file
@@ -81,7 +81,7 @@ neighbours[0]  # corner taxel: array([1, 3, 4])
 
 ## Rotation matrices and frame changes
 
-- `project_to_so3(matrices)`: Transforms a 3x3 matrix into the closest rotation matrix (the determinant must be 1). Necessary because of number rounding issues. See [so3-projection.md](theory/so3-projection.md).
+- `project_to_so3(matrices)`: Transforms a 3x3 matrix into the closest rotation matrix (the determinant must be 1). Necessary because of number rounding issues. See [so3-projection.md](../taxelCalib/so3-projection.md).
 - `rotate_vectors(rotations, vectors)`: rotates each vector by its own rotation matrix.
 - `transform_points(rotation, translation, points)`: Rotates and translates an array of points, $p \mapsto R p + t$.
 

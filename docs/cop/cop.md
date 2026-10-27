@@ -29,9 +29,9 @@ Each missing rotation is the smallest one taking the sensor's z axis to the taxe
 
 - z: the taxel's outward normal, from a plane fitted to the taxel and its nearest neighbours.
 - x and y: the sensor's x and y, tilted as little as possible to stay perpendicular to that normal. On a flat sensor, they are the sensor's x and y.
-- The positions of the taxels only allow to estimate the normal (z axis), not the rotation about it: the real x and y of a taxel should come from the [orientation calibration](taxel-orientation.md) or a known taxel layout.
+- The positions of the taxels only allow to estimate the normal (z axis), not the rotation about it: the real x and y of a taxel should come from the [orientation calibration](../taxelCalib/taxel-orientation.md) or a known taxel layout.
 
-Source: `src/nb_touch/geometry/frames.py`; see also [Finding normal at taxel](../sensor-geometry.md#finding-normal-at-taxel).
+Source: `src/nb_touch/geometry/frames.py`; see also [Finding normal at taxel](sensor-geometry.md#finding-normal-at-taxel).
 
 `ContactSettings` (symbols as in the paper, Section 3.2):
 
