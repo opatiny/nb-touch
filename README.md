@@ -172,8 +172,4 @@ For more details, see [docs/taxelCalib/taxel-orientation.md](https://github.com/
 
 ## Recording calibration data on a real hand
 
-This library was tested on a real robotic hand: the Orca hand touch. The code and results are accessible here:
-
-Coming soon
-
-<!--- todo: add link once code is public -->
+This library was tested on a real robotic hand: the Orca hand touch. A small report of the experiment is in [docs/orcahand-experiment](https://github.com/opatiny/nb-touch/blob/main/docs/orcahand-experiment/README.md).
