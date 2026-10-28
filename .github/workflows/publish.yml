@@ -1,11 +1,27 @@
 name: Publish
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
 
 jobs:
+  # Opens a release PR from conventional commits; merging it creates the
+  # tag and GitHub release. Publishing lives here because releases created
+  # with GITHUB_TOKEN do not trigger other workflows.
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+
   build:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
