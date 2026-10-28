@@ -1,6 +1,6 @@
 [project]
 name = "nb-touch"
-version = "0.1.0"
+version = "0.1.1"
 description = "Hardware-agnostic processing and calibration of taxel array touch sensors."
 readme = "README.md"
 license = "MIT"
