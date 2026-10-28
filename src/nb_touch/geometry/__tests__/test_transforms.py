@@ -75,3 +75,19 @@ def test_angles_between_rotations():
     np.testing.assert_allclose(
         angles_between_rotations(first, first @ turns), [0.0, 0.4, np.pi], atol=1e-7
     )
+
+
+def test_angles_between_rotations_are_accurate_near_zero():
+    turn = rotations_from_vectors([[0.0, 0.0, 1e-6]])
+    angles = angles_between_rotations(np.eye(3)[None], turn)
+    np.testing.assert_allclose(angles, [1e-6], rtol=1e-6)
+
+
+def test_angles_between_identical_float32_rotations_are_zero():
+    first = rotations_from_vectors([[0.3, -0.2, 0.5]]).astype(np.float32)
+    np.testing.assert_allclose(angles_between_rotations(first, first), [0.0], atol=1e-6)
+
+
+def test_angles_between_rotations_of_one_pair():
+    angle = angles_between_rotations(np.eye(3), QUARTER_TURN_Z)
+    np.testing.assert_allclose(angle, np.pi / 2)

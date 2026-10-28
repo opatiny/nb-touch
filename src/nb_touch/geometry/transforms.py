@@ -66,8 +66,11 @@ def angles_between_rotations(first, second) -> np.ndarray:
         second: Rotations `(n, 3, 3)`.
 
     Returns:
-        Angles `(n,)` in `[0, π]`, from `cos θ = (trace(R1^T R2) - 1) / 2`.
+        Angles `(n,)` in `[0, π]`, from `θ = atan2(sin θ, cos θ)`.
+        Unlike `arccos` alone, it stays accurate near 0 and π.
     """
     relative = np.swapaxes(np.asarray(first, dtype=float), -1, -2) @ second
     cosines = (np.trace(relative, axis1=-2, axis2=-1) - 1.0) / 2.0
-    return np.arccos(np.clip(cosines, -1.0, 1.0))
+    skew = relative - np.swapaxes(relative, -1, -2)
+    sines = np.linalg.norm(skew, axis=(-2, -1)) / (2.0 * np.sqrt(2.0))
+    return np.arctan2(sines, cosines)
